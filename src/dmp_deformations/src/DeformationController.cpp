@@ -626,7 +626,8 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
         //proper_contact=true; // TODO: REMOVE/FIX THIS
         double f_z_rotated = x_hat[2]*fx+y_hat[2]*fy+n_hat[2]*fz;
         cout << "FZ: " << f_z_rotated << " " << starting_points[ii][2] << endl;
-        if(f_z_rotated<0.95*starting_points[ii][2] && f_z_rotated>1.05*starting_points[ii][2])
+        // MH: reaction force so flip sign
+        if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
         {
             proper_contact = true;
         }
