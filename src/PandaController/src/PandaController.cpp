@@ -210,13 +210,14 @@ namespace PandaController {
 
         // Compute Position/Force Hybrid Control Law
         double scaling_factor = 5;
-        double Kfp = 0.0008;
+        double Kfp = 0.0012;
         double v_x_CF = selection_vector[0]*(commandedPosition[0] - currentPositionCF[0]) * scaling_factor + (1-selection_vector[0])*Kfp*(commandedForce[0]+currentForceCF[0]);
         double v_y_CF = selection_vector[1]*(commandedPosition[1] - currentPositionCF[1]) * scaling_factor + (1-selection_vector[1])*Kfp*(commandedForce[1]+currentForceCF[1]);
         double v_z_CF = selection_vector[2]*(commandedPosition[2] - currentPositionCF[2]) * scaling_factor + (1-selection_vector[2])*Kfp*(commandedForce[2]+currentForceCF[2]);
         
         // Rotate the desired orientation and cartesian velocity (difference) out of the constraint frame
-        Eigen::Quaterniond desired_q = constraint_frame * desired_qCF;     
+        // TODO: MH WHAT?! WHY DOES THIS HAVE TO BE INVERTED!!!!
+        Eigen::Quaterniond desired_q = constraint_frame.inverse() * desired_qCF;     
         Eigen::Vector3d v_CF;
         v_CF << v_x_CF, v_y_CF, v_z_CF;
         Eigen::Vector3d v_global = constraint_frame * v_CF;
