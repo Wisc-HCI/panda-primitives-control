@@ -68,12 +68,10 @@ def main():
     points = points/1000
 
     # Apply a rotation and a translation to all of the points
-    R = np.array([[1.0, 0.0, 0.0],
-                  [0.0, 1.0, 0.0],
-                  [0.0, 0.0, 1.0]])
-    t = np.array([0.38198, -0.2975, 0.0163])
-
-
+    R = np.array([[0.99978826, 0.00928849, -0.01836173],
+                  [-0.00907831, 0.9998927, 0.01149706],
+                  [0.01846655, -0.01132793, 0.9997653]])
+    t = np.array([0.38238362, -0.29635461, 0.012553])
 
     for ii in range(0, len(points)):
         points[ii] = (np.matmul(R, points[ii].reshape((3, 1))) + t.reshape((3, 1))).reshape(3, )

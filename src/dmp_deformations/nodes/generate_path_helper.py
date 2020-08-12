@@ -147,24 +147,24 @@ def main():
         surfaceModel = PyBSpline.BSplineSurface()
         surfaceModel.loadSurface("layup2")
 
-        csvfile.write(",layup2,,,layup2,")
+        csvfile.write(",layup2,,,layup2,,,layup2,")
         csvfile.write('\n')
-        csvfile.write("0,100,200,300,400,500")
+        csvfile.write("0,100,200,300,400,500,600,700,800")
         csvfile.write('\n')
-        csvfile.write("1,0,1,1,0,1")
+        csvfile.write("1,0,1,1,0,1,1,0,1")
         csvfile.write('\n')
         # csvfile.write("2 2 2,3 10 150,2 2 2")
-        csvfile.write("2 2 2,10 10 150,2 2 2,2 2 2,10 10 150,2 2 2")
+        csvfile.write("2 2 2,10 10 150,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,10 10 150,2 2 2")
         csvfile.write('\n')
 
-        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.8, 0.8)
+        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.9, 0.9)
 
-        starting_vel = r_u * -1.0 + r_v * 0.0
+        starting_vel = r_u * 0.0 + r_v * -1.0
         starting_vel = starting_vel / np.linalg.norm(starting_vel)
         starting_y = np.cross(normal_start, starting_vel)
         qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-        above_surf = surface_start + 0.005 * normal_start
+        above_surf = surface_start + 0.01 * normal_start
 
         printPathSection(csvfile, np.array(
             [0.50, 0.0, 0.25, 0, 0, 0, 1, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
@@ -173,11 +173,11 @@ def main():
                               0.0, 0.0, 0.0]), num_pts)
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-        printPathSection(csvfile, np.array([0.8, 0.8, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
-                         np.array([0.2, 0.8, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
+        printPathSection(csvfile, np.array([0.9, 0.9, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
+                         np.array([0.9, 0.15, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
 
-        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.8)
-        ending_vel = r_u * -1.0 + r_v * 0.0
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.9, 0.15)
+        ending_vel = r_u * 0.0 + r_v * -1.0
         ending_vel = ending_vel / np.linalg.norm(ending_vel)
         ending_y = np.cross(normal_end, ending_vel)
         qx_e, qy_e, qz_e, qw_e = calculateQuaternion(normal_end, ending_vel, ending_y)
@@ -187,14 +187,14 @@ def main():
              0.0]),
                          np.array([0.50, 0.0, 0.25, 0, 0, 0, 1, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
 
-        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.8, 0.8)
+        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.5, 0.9)
 
         starting_vel = r_u * 0.0 + r_v * -1.0
         starting_vel = starting_vel / np.linalg.norm(starting_vel)
         starting_y = np.cross(normal_start, starting_vel)
         qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-        above_surf = surface_start + 0.005 * normal_start
+        above_surf = surface_start + 0.01 * normal_start
 
         printPathSection(csvfile, np.array(
             [0.50, 0.0, 0.25, 0, 0, 0, 1, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
@@ -203,10 +203,41 @@ def main():
                               0.0, 0.0, 0.0]), num_pts)
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-        printPathSection(csvfile, np.array([0.8, 0.8, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
-                         np.array([0.8, 0.2, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
+        printPathSection(csvfile, np.array([0.5, 0.9, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
+                         np.array([0.5, 0.15, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
 
-        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.8, 0.2)
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.5, 0.15)
+        ending_vel = r_u * 0.0 + r_v * -1.0
+        ending_vel = ending_vel / np.linalg.norm(ending_vel)
+        ending_y = np.cross(normal_end, ending_vel)
+        qx_e, qy_e, qz_e, qw_e = calculateQuaternion(normal_end, ending_vel, ending_y)
+
+        printPathSection(csvfile, np.array(
+            [surface_end[0], surface_end[1], surface_end[2], qx_e, qy_e, qz_e, qw_e, 0.0, 0.0, -5.0, 0.0, 0.0,
+             0.0]),
+                         np.array([0.50, 0.0, 0.25, 0, 0, 0, 1, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
+
+
+        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.1, 0.9)
+
+        starting_vel = r_u * 0.0 + r_v * -1.0
+        starting_vel = starting_vel / np.linalg.norm(starting_vel)
+        starting_y = np.cross(normal_start, starting_vel)
+        qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
+
+        above_surf = surface_start + 0.01 * normal_start
+
+        printPathSection(csvfile, np.array(
+            [0.50, 0.0, 0.25, 0, 0, 0, 1, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
+                         np.array(
+                             [above_surf[0], above_surf[1], above_surf[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0,
+                              0.0, 0.0, 0.0]), num_pts)
+
+        # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
+        printPathSection(csvfile, np.array([0.1, 0.9, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]),
+                         np.array([0.1, 0.15, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
+
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.1, 0.15)
         ending_vel = r_u * 0.0 + r_v * -1.0
         ending_vel = ending_vel / np.linalg.norm(ending_vel)
         ending_y = np.cross(normal_end, ending_vel)

@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d
 from scipy.spatial.transform import Rotation as R
 
 def main():
-    bagfile='/home/mike/Downloads/calib_panda_board_8-7.bag'
+    bagfile='/home/mike/Desktop/calib_8-8_1.bag'
     calculate(bagfile)
 
 
