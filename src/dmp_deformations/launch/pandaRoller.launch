@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="panda_ros" type="pandaRosWrapper" name="panda_controller" output="screen">
+    </node>
+    <node pkg="dmp_deformations" type="pandaRollerSetup.py" name="pandaRollerSetup" output="screen">
+    </node>
+</launch>
