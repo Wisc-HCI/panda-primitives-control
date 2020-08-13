@@ -326,6 +326,8 @@ namespace PandaController {
 
     void robotControl(franka::Robot & robot) {
         int iteration = 0;
+        // MH Play with joint impedance for better contact control
+        // robot.setJointImpedance({{3000, 3000, 3000, 3000, 3000, 3000, 3000}});
         robot.control(bind(controlLoop, iteration, std::placeholders::_1, std::placeholders::_2));
     }
 
