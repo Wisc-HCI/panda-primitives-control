@@ -63,7 +63,7 @@ class DeformationController{
         void calculateNearestContact(int ii,vector<array<double,3>> selections,vector<array<double,7>> starting_points,vector<array<double,7>> attractor_points,bool &dmp_x_limiting,bool &dmp_y_limiting,bool &dmp_z_limiting,double &dmp_x_collision, double &dmp_y_collision, double &dmp_z_collision);
         array<double,3> deformationScaling(array<double,3> &rotated_deformation, double var_x, double var_y, double var_z, geometry_msgs::Vector3 selection, double x, double y, double collision_scaling);
         array<double,3> getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v );
-        array<double,3> map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz);
+        array<double,3> map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz, array<double,4> q_out);
         void forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub);
         void readDemo(vector<vector<array<double,7>>> &dmps,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp);
         void replay_demo(ros::NodeHandle n);
@@ -506,7 +506,7 @@ array<double,3> DeformationController::getFirstSurfaceVelocity(array<double,7> a
     return vel_hat;
 }
 
-array<double,3> DeformationController::map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz){
+array<double,3> DeformationController::map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz, array<double,4> q_surface){
     // TODO: add the selection vector stuff
 
     // Methods:
@@ -521,7 +521,7 @@ array<double,3> DeformationController::map_deformation_input(int method, double 
         // Task-Oriented Frame
         /////////////////
         // This quaternion rotates it to be aligned with the general camera/x-y directions
-        deformation_rotation = vectorIntoConstraintFrame(dmp_fx, dmp_fy, dmp_fz, 0.0, 0.0, -0.7071068, 0.7071068);
+        deformation_rotation = vectorIntoConstraintFrame(dmp_fx, dmp_fy, dmp_fz, q_surface[0], q_surface[1], q_surface[2], q_surface[3]);
         return deformation_rotation;
     }
 
@@ -883,13 +883,14 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     bool previous_dmp_no_contact = true;
     double transition_x=0.0, transition_y=0.0, transition_z=0.0;
     double transition_def_x=0.0, transition_def_y=0.0, transition_def_z=0.0;
-    bool dmp_x_limiting;
-    bool dmp_y_limiting;
-    bool dmp_z_limiting;
+    bool dmp_x_limiting; bool dmp_y_limiting; bool dmp_z_limiting;
     double dmp_x_collision = 0.0;
     double dmp_y_collision = 0.0;
     double dmp_z_collision = 0.0;
     double surface_scaling_x = 1.0; double surface_scaling_y = 1.0;
+
+    array<double,3> u_dir = {1.0, 0.0, 0.0};
+    array<double,3> v_dir = {1.0, 0.0, 0.0};
 
     BSplineSurface curr_surface;
 
@@ -900,14 +901,18 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         {
             // Load the B-spline surface
             curr_surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+surfaces[ii]+".csv");
+            curr_surface.get_uv_dirs(u_dir ,v_dir);
 
             // get the surface ~ scaling
-            surface_scaling_y = 0.5;
+            surface_scaling_y = 1.0;
 
         }
 
         else{
             // surface scaling is 1.0
+            u_dir = {1.0, 0.0, 0.0};
+            v_dir = {1.0, 0.0, 0.0};
+
             surface_scaling_x = 1.0; surface_scaling_y = 1.0;
         }
 
@@ -989,7 +994,12 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             // 1 - Task Frame
             // 2 - Velocity Frame
             int input_mapping_method=1;
-            array<double,3> rotated_deformation = map_deformation_input(input_mapping_method,dmp_fx,dmp_fy,dmp_fz,dx,dy,dz);
+            array<double,4> q_surface;
+            rotationToQuaternion(u_dir,v_dir,crossProduct(u_dir,v_dir),q_surface);
+
+            cout << "DEF: " << dmp_fx << " " <<  dmp_fy << " " << dmp_fz << endl;
+
+            array<double,3> rotated_deformation = map_deformation_input(input_mapping_method,dmp_fx,dmp_fy,dmp_fz,dx,dy,dz,q_surface);
 
             /////////////////////////////////////////////////////////////////
             //      Deformation scaling                                    //
@@ -1129,7 +1139,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             double dir_x = dx/sqrt(dx*dx+dy*dy);
             double dir_y = dy/sqrt(dx*dx+dy*dy);
             // TODO: this aint right
-            double dp_in_dir = dir_x*final_deformation[0] + dir_y*final_deformation[1];
+            double dp_in_dir = dir_x*rotated_deformation[0] + dir_y*rotated_deformation[1];
             
             if(dp_in_dir > 0)
             {
@@ -1140,6 +1150,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             dp_in_dir = 0.0;
 
             delta_s = 1.0+dp_in_dir;
+            cout << "DS:" << delta_s << endl;
             s+=delta_s;
 
 

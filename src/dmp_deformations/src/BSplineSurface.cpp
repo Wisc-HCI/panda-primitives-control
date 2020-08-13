@@ -52,6 +52,10 @@ void BSplineSurface::initialize(int order, vector<vector<array<double,3>>> &pts)
     knots_v = knot_v_temp;
 }
 
+void BSplineSurface::get_uv_dirs(array<double,3> &u_dir , array<double,3> &v_dir){
+    u_dir = u_dir_plane;
+    v_dir = v_dir_plane;
+}
 
 void BSplineSurface::calculateSurfacePoint(double u, double v, array<double,3> &r, array<double,3> &n_hat, array<double,3> &r_u, array<double,3> &r_v){
     r = {0.0, 0.0, 0.0};
@@ -205,6 +209,20 @@ void BSplineSurface::loadSurface(string filename){
             pts_temp.push_back(row_temp);
             row_temp.clear();
         }
+
+        array<double,3> u_dir;
+        getline(surfacefile,temp,','); u_dir[0] = atof(temp.c_str());
+        getline(surfacefile,temp,','); u_dir[1] = atof(temp.c_str());
+        getline(surfacefile,temp); u_dir[2] = atof(temp.c_str());
+
+        array<double,3> v_dir;
+        getline(surfacefile,temp,','); v_dir[0] = atof(temp.c_str());
+        getline(surfacefile,temp,','); v_dir[1] = atof(temp.c_str());
+        getline(surfacefile,temp); v_dir[2] = atof(temp.c_str());
+
+        // Save directions
+        u_dir_plane = u_dir;
+        v_dir_plane = v_dir;
 
         // reverse before saving
         initialize(k_temp,pts_temp);

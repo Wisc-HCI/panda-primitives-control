@@ -71,7 +71,16 @@ def main():
     R = np.array([[0.99978826, 0.00928849, -0.01836173],
                   [-0.00907831, 0.9998927, 0.01149706],
                   [0.01846655, -0.01132793, 0.9997653]])
+
+    R2 = np.array([[-1.0, 0.0, 0.0],
+                  [0.0, -1.0, 0.0],
+                  [0.0, 0.0, 1.0]])
+
+    R = np.matmul(R,R2)
     t = np.array([0.38238362, -0.29635461, 0.012553])
+
+    t_addtl = np.matmul(R,np.array([-0.025*11, -0.025*17, 0.0]).reshape((3,1))).reshape((3,))
+    t = t+t_addtl
 
     for ii in range(0, len(points)):
         points[ii] = (np.matmul(R, points[ii].reshape((3, 1))) + t.reshape((3, 1))).reshape(3, )
@@ -201,6 +210,11 @@ def main():
             pt_3d = np.matmul(exp_map_np([wx,wy,0.0]),np.array([pt_on_plane[0], pt_on_plane[1], d]).reshape((3,1)))
             ctrl_pts[ii,jj,:]=pt_3d.reshape((3,))
 
+    # Get the U and V vectors in 3D space to be used later on for input mapping
+    u_dir_plane = np.matmul(exp_map_np([wx,wy,0.0]),np.array([edge_vec_b[0], edge_vec_b[1], 0]).reshape((3,1))).reshape((3,))
+    v_dir_plane = np.matmul(exp_map_np([wx, wy, 0.0]), np.array([orth_edge_vec_b[0], orth_edge_vec_b[1], 0]).reshape((3,1))).reshape((3,))
+
+
     # conform back to the surface as control points (Do I need a spring - start w/o it!)
     points_rich, something = sample.sample_surface_even(mesh, 10000)
     points_rich = points_rich/1000 # mm to m issue
@@ -283,6 +297,9 @@ def main():
                 ctrl_pts_flipped[jj][ii][:]=ctrl_pts[ii][jj][:]
 
         ctrl_pts = ctrl_pts_flipped
+        temp_dir = u_dir_plane
+        u_dir_plane = v_dir_plane
+        v_dir_plane = temp_dir
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -299,7 +316,7 @@ def main():
 
     # Create a B-Spline instance
     curve = BSplineSurface()
-    curve.initialize(k=3, control_pts=ctrl_pts)
+    curve.initialize(k=3, control_pts=ctrl_pts, u_dir=u_dir_plane, v_dir=v_dir_plane)
     curve.writeSurface('layup2')
 if __name__ == "__main__":
     main()

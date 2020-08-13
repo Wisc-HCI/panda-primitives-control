@@ -21,8 +21,11 @@ class BSplineSurface{
         vector<double> knots_u;
         vector<double> knots_v;
 
+        array<double,3> u_dir_plane;
+        array<double,3> v_dir_plane;
+
         // Recursive function for getting B-spline basis function values
-        double getN(int i, int p, double x, vector<double> t);
+        double getN(int i, int p, double x, vector<double> t);       
         
     public:
         BSplineSurface();
@@ -39,4 +42,6 @@ class BSplineSurface{
         
         // TODO: Actually write this!
         void writeSurface(string filename);
+
+        void get_uv_dirs(array<double,3> &u_dir , array<double,3> &v_dir);
 };

@@ -28,7 +28,7 @@ def exp_map_np(w):
 
 class BSplineSurface:
 
-    def initialize(self,k=3,control_pts=np.zeros((1,1,3))):
+    def initialize(self,k=3,control_pts=np.zeros((1,1,3)),u_dir=None, v_dir=None):
         # Parameters for building B-Spline Surface
         self.k = k # order of the B-spline
         self.controls_pts = control_pts # n control points by 3 (x,y,z)
@@ -43,6 +43,58 @@ class BSplineSurface:
                                        np.ones((self.k,))])  # number uniform knots in u-direction
         self.knots_v = np.concatenate([np.zeros((self.k,)), np.linspace(0, 1, (self.n-self.k+2)),
                                        np.ones((self.k,))])  # number uniform knots in v-direction
+
+
+        # u and v directions to be used for input mapping
+        if u_dir is not None and v_dir is not None:
+            self.u_dir = u_dir
+            self.v_dir = v_dir
+        else:
+            self.u_dir = np.array([1,0,0])
+            self.v_dir = np.array([0,1,0])
+
+        #self.u_dir, self.v_dir = self.calculate_planar_directions()
+
+    def exp_map_np(self,w):
+        w = np.array(w)
+        w = w.reshape(3, )
+        theta = (w[0] ** 2 + w[1] ** 2 + w[2] ** 2) ** 0.5 + 1e-30
+        w = w / theta
+        w_hat = np.array([[0, -w[2], w[1]], [w[2], 0, -w[0]], [-w[1], w[0], 0]])
+        return np.eye(3) + w_hat * np.sin(theta) + np.dot(w_hat, w_hat) * (1 - np.cos(theta))
+
+    # x are the parameters, stored as wx,wy,d
+    # y are the points in the point cloud
+    def obj_plane_dist(self,x, pts):
+        sum = 0.0
+        for pt in pts:
+            # equation for the plane - sum of residual is used as the LSQ error
+            vec_to_plane_center = np.transpose(
+                np.matmul(exp_map_np([x[0], x[1], 0.0]), np.array([0.0, 0.0, x[2]]).reshape((3, 1))) - pt.reshape(
+                    (3, 1)))
+            sum += np.abs(np.matmul(vec_to_plane_center, np.matmul(exp_map_np([x[0], x[1], 0.0]),
+                                                                   np.array([0.0, 0.0, 1.0]).reshape((3, 1))))[0][0])
+        # print x[0], x[1], x[2], sum
+        return sum
+
+    def findPlane(self,pts):
+        best_opt = np.inf
+        for ii in range(0, 5):
+            wx = np.random.rand() * np.pi / 2
+            wy = np.random.rand() * np.pi / 2
+            d = 1.0 * (np.random.rand() - 0.5)
+
+            x0 = np.array([wx, wy, d])
+            res = minimize(self.obj_plane_dist, x0, method='Nelder-Mead',
+                           options={'disp': False}, bounds=None, args=(pts))
+
+            if res.fun < best_opt:
+                best_opt = res.fun
+                wx_best = res.x[0]
+                wy_best = res.x[1]
+                d_best = res.x[2]
+
+        return wx_best, wy_best, d_best
 
     def calculate_surface_point(self,u,v):
         # Calculate all of the basis functions for the given u,v
@@ -137,6 +189,14 @@ class BSplineSurface:
                                   str(self.controls_pts[ii,jj,2])+',')
                 csvfile.write('\n')
 
+            # write u and v directions
+            csvfile.write(str(self.u_dir[0]) + ' ' + str(self.u_dir[1]) + ' ' +
+            str(self.u_dir[2]) + ',')
+            csvfile.write('\n')
+            csvfile.write(str(self.v_dir[0]) + ' ' + str(self.v_dir[1]) + ' ' +
+            str(self.v_dir[2]) + ',')
+            csvfile.write('\n')
+
     def loadSurface(self, filename):
         rospack = rospkg.RosPack()
         path_devel = rospack.get_path('dmp_deformations') + "/../../devel/lib/dmp_deformations/"
@@ -153,30 +213,19 @@ class BSplineSurface:
                     control_pts = np.zeros((num_control_u+1,num_control_v+1,3))
                 else:
                     col=0
-                    for ii in range(0,num_control_v+1):
-                        point = row_temp[ii]
-                        values = point.split(' ')
-                        # one extra row for parameters
-                        control_pts[row-1,col,0]=float(values[0])
-                        control_pts[row-1,col,1]=float(values[1])
-                        control_pts[row-1,col,2]=float(values[2])
-                        col+=1
+                    if row<num_control_u: # don't include u and v directions at the end
+                        for ii in range(0,num_control_v+1):
+                                point = row_temp[ii]
+                                values = point.split(' ')
+                                # one extra row for parameters
+                                control_pts[row-1,col,0]=float(values[0])
+                                control_pts[row-1,col,1]=float(values[1])
+                                control_pts[row-1,col,2]=float(values[2])
+                                col+=1
                 row+=1
 
             # initialize the B-Spline
             self.initialize(k=k,control_pts=control_pts)
-
-    def learnSurfaceFromPC(self):
-        print("LOLZ. NOT YET")
-
-
-    #### TODO: work with Emmanuel to come up with the requirements
-
-    #### NEED TO ADD SURFACE LEARNING
-
-    #### ADD SURFACE ICP FITTING BASED ON KNOWN MODEL AND POINT CLOUD?
-
-
 
 
 def createCurved():
