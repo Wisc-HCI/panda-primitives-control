@@ -50,121 +50,12 @@ void BSplineSurface::initialize(int order, vector<vector<array<double,3>>> &pts)
         knot_v_temp.push_back(1.0);
     }
     knots_v = knot_v_temp;
-    calculate_plane_dirs();
 }
 
-// calculates the rotation matrix for rotation represented in exponentials
-Eigen::MatrixXd BSplineSurface::exp_map(Eigen::VectorXd w){
-    Eigen::MatrixXd w_hat(3,3);
-    cout << "A" << endl;
-    double theta = pow(w[0]*w[0]+w[1]*w[1]+w[2]*w[2],0.5);
-    w_hat(0,0)=0.0;
-    w_hat(0,1)=-w[2]/theta;
-    w_hat(0,2)=w[1]/theta;
-    w_hat(1,0)=w[2]/theta;
-    w_hat(1,1)=0.0;
-    w_hat(1,2)=-w[0]/theta;
-    w_hat(2,0)=-w[1]/theta;
-    w_hat(2,1)=w[0]/theta;
-    w_hat(2,2)=0.0;
-
-    Eigen::MatrixXd R(3,3);
-    R = Eigen::MatrixXd::Identity(3, 3)+w_hat*sin(theta)+w_hat*w_hat*(1-cos(theta));
-    return R;
+void BSplineSurface::get_uv_dirs(array<double,3> &u_dir , array<double,3> &v_dir){
+    u_dir = u_dir_plane;
+    v_dir = v_dir_plane;
 }
-
-// Next 3 pieces are for surface optimization
-double BSplineSurface::obj_bestplane(const std::vector<double> &x, std::vector<double> &grad, void *data)
-{
-    vector<vector<array<double,3>>> *control_pts = (vector<vector<array<double,3>>> *) data;
-
-    double residual = 0.0;
-    
-    // Go through each point and sum up the error
-    for(int ii=0;ii<control_pts->size();ii++){
-        for(int jj=0;jj<control_pts->at(0).size();jj++){
-            Eigen::VectorXd w(3);
-            Eigen::MatrixXd pt(3,1);
-            w(0)=x[0]; w(1)=x[1]; w(2)=0.0;
-            pt(0,0)=control_pts->at(ii).at(jj)[0]; pt(1,0)=control_pts->at(ii).at(jj)[1]; pt(2,0)=control_pts->at(ii).at(jj)[2];
-            
-            Eigen::MatrixXd d_vec(3,1);
-            d_vec(0,0)=0.0; d_vec(1,0)=0.0; d_vec(2,0)=x[2];
-            Eigen::MatrixXd vec_to_plane_center(3,1);
-            cout << "B" << endl;
-            Eigen::MatrixXd expmap(3,3);
-            expmap = exp_map(w);
-            cout << "C" << endl;
-            vec_to_plane_center = expmap * d_vec - pt;
-
-            Eigen::MatrixXd normal_vec(3,1);
-            normal_vec(0,0) = 0.0; normal_vec(1,0) = 0.0; normal_vec(2,0) = 1.0; 
-
-            Eigen::MatrixXd residual_temp;
-            residual_temp = vec_to_plane_center.transpose() * expmap*normal_vec;
-
-            double residual_tempf = residual_temp(0,0);
-
-            residual+=abs(residual_tempf);
-        }
-    }
-    
-    return residual;
-}
-
-void BSplineSurface::calculate_plane_dirs(){
-    // Fit the best plane of the surface to be used
-    // for input mapping
-
-    double best_opt = 9999999.9;
-    nlopt::opt opt(nlopt::LN_COBYLA, 3);
-    
-    
-
-    std::vector<double> lb(3);
-    lb[0] = 0.0; lb[1] = 0.0; lb[2] = -9999999.9;
-    std::vector<double> ub(3);
-    ub[0] = 1.570796; ub[1] = 1.570796; ub[2] = 9999999.9;
-    opt.set_lower_bounds(lb);
-    opt.set_upper_bounds(ub);
-
-    double wx_best, wy_best, d_best;
-    for(int i=0;i<5;i++){
-        double wx = 1.570796*(float)rand()/RAND_MAX; //random 0->pi/2
-        double wy = 1.570796*(float)rand()/RAND_MAX; //random 0->pi/2
-        double d = 1.0*((float)rand()/RAND_MAX-0.5); //1.0*(np.random.rand()-0.5)
-
-        // Initial guess for parameters U,V
-        std::vector<double> params(3);
-        params[0] = wx; params[1] = wy; params[2]=d;
-        double minf;
-
-        opt.set_min_objective(obj_bestplane,&control_pts);
-        opt.set_xtol_rel(1e-4);
-
-        try{
-            nlopt::result result = opt.optimize(params, minf);
-            
-            // Output new values if found
-            wx = params[0]; wy = params[1]; d = params[2];
-
-            if (minf<best_opt){
-                wx_best = wx;
-                wy_best = wy;
-                d_best = d;
-            }
-            
-        }
-        catch(std::exception &e) {
-            std::cout << "nlopt failed: " << e.what() << std::endl;
-        }
-    }
-
-    cout << "PLANESIES: " << wx_best << " " << wy_best << " " << d_best << endl;
-      
-}
-
-
 
 void BSplineSurface::calculateSurfacePoint(double u, double v, array<double,3> &r, array<double,3> &n_hat, array<double,3> &r_u, array<double,3> &r_v){
     r = {0.0, 0.0, 0.0};
@@ -318,6 +209,20 @@ void BSplineSurface::loadSurface(string filename){
             pts_temp.push_back(row_temp);
             row_temp.clear();
         }
+
+        array<double,3> u_dir;
+        getline(surfacefile,temp,','); u_dir[0] = atof(temp.c_str());
+        getline(surfacefile,temp,','); u_dir[1] = atof(temp.c_str());
+        getline(surfacefile,temp); u_dir[2] = atof(temp.c_str());
+
+        array<double,3> v_dir;
+        getline(surfacefile,temp,','); v_dir[0] = atof(temp.c_str());
+        getline(surfacefile,temp,','); v_dir[1] = atof(temp.c_str());
+        getline(surfacefile,temp); v_dir[2] = atof(temp.c_str());
+
+        // Save directions
+        u_dir_plane = u_dir;
+        v_dir_plane = v_dir;
 
         // reverse before saving
         initialize(k_temp,pts_temp);

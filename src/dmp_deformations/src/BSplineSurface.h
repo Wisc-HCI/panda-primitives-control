@@ -9,9 +9,6 @@
 #include <array>
 #include <algorithm>
 #include <math.h>
-#include <nlopt.hpp>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
 
 using namespace std;
 
@@ -28,12 +25,7 @@ class BSplineSurface{
         array<double,3> v_dir_plane;
 
         // Recursive function for getting B-spline basis function values
-        double getN(int i, int p, double x, vector<double> t);
-
-        static double obj_bestplane(const std::vector<double> &x, std::vector<double> &grad, void *data);
-        void calculate_plane_dirs();
-        static Eigen::MatrixXd exp_map(Eigen::VectorXd w);
-        
+        double getN(int i, int p, double x, vector<double> t);       
         
     public:
         BSplineSurface();
@@ -50,4 +42,6 @@ class BSplineSurface{
         
         // TODO: Actually write this!
         void writeSurface(string filename);
+
+        void get_uv_dirs(array<double,3> &u_dir , array<double,3> &v_dir);
 };
