@@ -32,18 +32,24 @@ namespace {
 
 ros::Publisher g_eventPub {};
 ros::Publisher g_wrenchPub {};
-ros::Publisher g_wrenchLocalPub {};
+ros::Publisher g_controlWrenchPub {};
 ros::Publisher g_jointPub {};
 
 void setKinematicChain(const std_msgs::String& msg) {
     if (msg.data == "pandaFlange") {
         kinematicChain = PandaController::KinematicChain::PandaFlange;
     }
+    if (msg.data == "pandaCamera") {
+        kinematicChain = PandaController::KinematicChain::PandaCamera;
+    }
 }
 
 void setEELink(const std_msgs::String& msg) {
     if (msg.data == "pandaGripper") {
         eeLink = PandaController::EELink::PandaGripper;
+    }
+    if (msg.data == "cameraLink") {
+        eeLink = PandaController::EELink::CameraLink;
     }
     if (msg.data == "pandaRoller") {
         eeLink = PandaController::EELink::PandaRoller;
@@ -182,8 +188,7 @@ void setVelocity(const geometry_msgs::TwistStamped::ConstPtr& msg) {
     if (PandaController::isRunning()) {
         PandaController::setKinematicChain(kinematicChain, eeLink);
         auto twist = msg->twist;
-
-        Eigen::VectorXd velocity;
+        Eigen::VectorXd velocity(6);
         velocity << 
             twist.linear.x,
             twist.linear.y,
@@ -198,7 +203,13 @@ void setVelocity(const geometry_msgs::TwistStamped::ConstPtr& msg) {
             [velocity, end_time]() {
                 if (ros::Time::now().toSec() > end_time){
                     Eigen::VectorXd velocity(6);
-                    velocity.setZero();
+                    velocity << 
+                    ((double) rand() / (RAND_MAX))/100000.,
+                    ((double) rand() / (RAND_MAX))/100000.,
+                    ((double) rand() / (RAND_MAX))/100000.,
+                    ((double) rand() / (RAND_MAX))/100000.,
+                    ((double) rand() / (RAND_MAX))/100000.,
+                    ((double) rand() / (RAND_MAX))/100000.;
                     return velocity;
                 }
                 else
@@ -230,7 +241,7 @@ void setJointPose(const panda_ros_msgs::JointPose::ConstPtr& msg) {
                 franka::RobotState robot_state = PandaController::readRobotState();
                 Eigen::VectorXd q_v = Eigen::Map<Eigen::VectorXd>(robot_state.q.data(), 7);
                 if (progress > 1){
-                    return q_v;
+                    return goal;
                 }
                 else
                     return (q_v + (goal - q_v) * progress).eval();
@@ -322,16 +333,15 @@ void publishJointState(franka::RobotState robot_state){
     g_jointPub.publish(states);
 }
 
-void publishTf(franka::RobotState robot_state){
+void publishFrame(string name, PandaController::KinematicChain chain, PandaController::EELink link){
     static tf2_ros::TransformBroadcaster br;
-    Eigen::Vector3d position = PandaController::getEEPos();
-    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
-
+    Eigen::Vector3d position = PandaController::getEEPos(chain, link);
+    Eigen::Quaterniond orientation = PandaController::getEEOrientation(chain, link);
     geometry_msgs::TransformStamped transformStamped;
     
     transformStamped.header.stamp = ros::Time::now();
     transformStamped.header.frame_id = "panda_link0";
-    transformStamped.child_frame_id = "end_effector";
+    transformStamped.child_frame_id = name;
     transformStamped.transform.translation.x = position[0];
     transformStamped.transform.translation.y = position[1];
     transformStamped.transform.translation.z = position[2];
@@ -342,6 +352,11 @@ void publishTf(franka::RobotState robot_state){
     transformStamped.transform.rotation.w = orientation.coeffs()[3];
 
     br.sendTransform(transformStamped);
+}
+void publishTf(franka::RobotState robot_state){
+    publishFrame("panda_ee", kinematicChain, eeLink);
+    publishFrame("panda_camera", PandaController::KinematicChain::PandaCamera, PandaController::EELink::CameraLink);
+    publishFrame("panda_gripper", PandaController::KinematicChain::PandaFlange, PandaController::EELink::PandaGripper);
 }
 
 void publishWrench(franka::RobotState robot_state){
@@ -384,7 +399,15 @@ void publishWrenchLocal(franka::RobotState robot_state){
     wrench.torque.y = forces[4];
     wrench.torque.z = forces[5];
 
-    g_wrenchLocalPub.publish(wrench);
+    g_wrenchPub.publish(wrench);
+    wrench.force.x = -forces[0];
+    wrench.force.y = -forces[1];
+    wrench.force.z = -forces[2];
+    wrench.torque.x = -forces[3];
+    wrench.torque.y = -forces[4];
+    wrench.torque.z = -forces[5];
+
+    g_controlWrenchPub.publish(wrench);
 }
 
 void publishState(){
@@ -422,7 +445,7 @@ int main(int argc, char **argv) {
     ros::Subscriber sub_hybrid = n.subscribe("/panda/hybrid_pose", 10, setHybrid);
 
     g_wrenchPub = n.advertise<geometry_msgs::Wrench>("/panda/wrench", 10);
-    g_wrenchLocalPub = n.advertise<geometry_msgs::Wrench>("/panda/wrenchlocal", 10);
+    g_controlWrenchPub = n.advertise<geometry_msgs::Wrench>("/panda/control_wrench", 10);
     g_jointPub = n.advertise<sensor_msgs::JointState>("/panda/joint_states", 1);
     g_eventPub = n.advertise<std_msgs::String>("/panda/events", 1);
     ros::Rate loopRate(1000);

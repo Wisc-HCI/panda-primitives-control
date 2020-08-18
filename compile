@@ -5,9 +5,9 @@ cd build
 cmake ..
 make install
 cd ../../..
-catkin build relaxed_ik
-catkin build panda_ros_msgs
-catkin build panda_ros
-catkin build dmp_deformations
-catkin build inputs_ros
-catkin build controller
+catkin build relaxed_ik --no-notify
+catkin build panda_ros_msgs --no-notify
+catkin build panda_ros --no-notify
+catkin build dmp_deformations --no-notify
+catkin build inputs_ros --no-notify
+catkin build controller --no-notify

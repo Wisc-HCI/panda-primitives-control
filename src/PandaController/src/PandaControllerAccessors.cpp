@@ -33,6 +33,17 @@ namespace PandaController {
             DHA(  0.0879,       0,  M_PI/2,  6),
             DHA(       0,  0.1069,       0, -1),
         };
+        
+        vector<DHA> PandaCameraDHA{
+            DHA(       0,   0.333,       0,  0),
+            DHA(       0,       0, -M_PI/2,  1),
+            DHA(       0, 0.31599,  M_PI/2,  2),
+            DHA( 0.08249,       0,  M_PI/2,  3),
+            DHA(-0.08249,   0.384, -M_PI/2,  4),
+            DHA(       0,       0,  M_PI/2,  5),
+            DHA(  0.0879,       0,       0, -1),
+        };
+
         Eigen::Matrix4d pandaGripperEELink = (
             Eigen::Matrix4d() << 
                  0.7071, -0.7071,  0,       0, 
@@ -54,6 +65,7 @@ namespace PandaController {
                       0,       0,  0,       1
         ).finished();
 
+
         // 1 in roller installed + 0.1 mm for tape
         // center hole to mating surface is 0.08938m
         // force torque sensor is 0.06534 m
@@ -67,30 +79,46 @@ namespace PandaController {
 
         vector<DHA> ee_chain = PandaFlangeDHA;
         Eigen::Matrix4d ee_link = pandaGripperEELink;
+       
+        Eigen::Matrix4d cameraLink = (
+            Eigen::Matrix4d() << 
+                  1.0,    .0,    0,      .065, 
+                    0,    .0,    1,     -.038, 
+                    0,    -1,   .0,      .037, 
+                    0,     0,    0,         1
+        ).finished();
+
+    }
+
+    std::vector<DHA> getChain(PandaController::KinematicChain chain){
+        switch (chain){
+            case KinematicChain::PandaFlange:
+                return PandaFlangeDHA;
+            case KinematicChain::PandaCamera:
+                return PandaCameraDHA;
+            default:
+                return PandaFlangeDHA;
+        }
+    }
+
+    Eigen::Matrix4d getEELink(PandaController::EELink link){
+        switch (link) {
+            case EELink::PandaGripper:
+                return pandaGripperEELink;
+            case EELink::PandaRoller:
+                return pandaRollerEELink;
+            case EELink::PandaMocap:
+                return pandaMocapEELink;
+            case EELink::CameraLink:
+                return cameraLink;
+            default:
+                return pandaGripperEELink;
+        }
     }
 
     void setKinematicChain(KinematicChain chain, EELink link) {
-        switch (chain){
-            case KinematicChain::PandaFlange:
-                ee_chain = PandaFlangeDHA;
-                break;
-            default:
-                ee_chain = PandaFlangeDHA;
-                break;
-        }
-        switch (link) {
-            case EELink::PandaGripper:
-                ee_link = pandaGripperEELink;
-                break;
-            case EELink::PandaRoller:
-                ee_link = pandaRollerEELink;
-                break;
-            case EELink::PandaMocap:
-                ee_link = pandaMocapEELink;
-            default:
-                ee_link = pandaGripperEELink;
-                break;
-        }
+        ee_chain = getChain(chain);
+        ee_link = getEELink(link);
     }
 
     void setTrajectory(Trajectory t) {
@@ -224,10 +252,29 @@ namespace PandaController {
         return Eigen::Vector3d(transform.translation());
     }
 
+    Eigen::VectorXd getEEPos(PandaController::KinematicChain chain, PandaController::EELink link) {
+        std::vector<DHA> temp_ee_chain = getChain(chain);
+        Eigen::Matrix4d temp_ee_link = getEELink(link);
+
+        boost::lock_guard<boost::mutex> guard(mutex);
+        Eigen::Affine3d transform(EEFromDHA(current_state.q, temp_ee_chain, temp_ee_link));
+        return Eigen::Vector3d(transform.translation());
+    }
+
     Eigen::Quaterniond getEEOrientation() {
         Eigen::Affine3d transform(getEETransform());
         return Eigen::Quaterniond(transform.linear()).normalized();
     }
+    
+    Eigen::Quaterniond getEEOrientation(PandaController::KinematicChain chain, PandaController::EELink link) {
+        std::vector<DHA> temp_ee_chain = getChain(chain);
+        Eigen::Matrix4d temp_ee_link = getEELink(link);
+
+        boost::lock_guard<boost::mutex> guard(mutex);
+        Eigen::Affine3d transform(EEFromDHA(current_state.q, temp_ee_chain, temp_ee_link));
+        return Eigen::Quaterniond(transform.linear()).normalized();
+    }    
+
 
     franka::RobotState readRobotState(){
         boost::lock_guard<boost::mutex> guard(mutex);
