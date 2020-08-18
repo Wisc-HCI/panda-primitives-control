@@ -213,7 +213,7 @@ class BSplineSurface:
                     control_pts = np.zeros((num_control_u+1,num_control_v+1,3))
                 else:
                     col=0
-                    if row<num_control_u: # don't include u and v directions at the end
+                    if row<=(num_control_u+1): # don't include u and v directions at the end
                         for ii in range(0,num_control_v+1):
                                 point = row_temp[ii]
                                 values = point.split(' ')
