@@ -200,7 +200,7 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
             # Determine the playback speed based on velocities in the demonstration #
             #########################################################################
 
-            max_vel = 0.05 # m/s
+            max_vel = 0.075 # m/s
             panda_delta_T = 0.01 # 1 ms
             # TODO: this really should probably be switched back to maximum velocity
 
