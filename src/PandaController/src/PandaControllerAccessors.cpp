@@ -67,13 +67,14 @@ namespace PandaController {
 
 
         // 1 in roller installed + 0.1 mm for tape
+        // 3.5 mm for rubber casing
         // center hole to mating surface is 0.08938m
         // force torque sensor is 0.06534 m
         Eigen::Matrix4d pandaRollerEELink = (
             Eigen::Matrix4d() << 
                  0.0,  -1.0,     0,       0, 
                  -1.0,  0.0,     0,       0, 
-                    0,     0,  -1.0, 0.16842, 
+                    0,     0,  -1.0, 0.17102, 
                     0,     0,     0,       1
         ).finished();
 
