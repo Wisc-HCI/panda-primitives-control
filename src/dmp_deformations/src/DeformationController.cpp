@@ -452,7 +452,7 @@ array<double,3> DeformationController::deformationScaling(array<double,3> &rotat
 
     // Parameterized surfaces have a range of 0<=x<=1
     // Make sure it is not over the bounds (for hybrid control)
-    double minEdgePercent = 0.05;
+    double minEdgePercent = 0.02;
     if (selection.z == 0){
         // Direction 1
         if((final_deformation[0]/k+x)>(1.0-minEdgePercent)){
