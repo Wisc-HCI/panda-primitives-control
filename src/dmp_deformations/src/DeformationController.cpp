@@ -838,7 +838,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     ros::spinOnce();
     try{
         geometry_msgs::TransformStamped transformStamped;
-        transformStamped = tfBuffer.lookupTransform("panda_link0", "end_effector",ros::Time(0));
+        transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
         actual_pos[0] = transformStamped.transform.translation.x;
         actual_pos[1] = transformStamped.transform.translation.y;
         actual_pos[2] = transformStamped.transform.translation.z;

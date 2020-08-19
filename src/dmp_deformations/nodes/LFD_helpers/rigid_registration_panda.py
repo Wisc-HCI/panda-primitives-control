@@ -40,7 +40,7 @@ def calculate(bagfile):
 
     for msg,ts in zip(tf_msgs,tf_timestamps):
         for transform in msg.transforms:
-            if transform.child_frame_id=='end_effector':
+            if transform.child_frame_id=='panda_ee':
                 panda_frame.append([transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z])
                 panda_frame_ts.append(ts)
             elif transform.child_frame_id=='optical_breadboard':
