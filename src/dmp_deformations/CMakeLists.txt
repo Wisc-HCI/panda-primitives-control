@@ -40,6 +40,10 @@ add_executable(fdbilateral src/ForceDimension_Bilateral.cpp)
 target_include_directories(fdbilateral PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
 target_link_libraries(fdbilateral ${catkin_LIBRARIES} ${DHDC})
 
+add_executable(falconbilateral src/Falcon_Bilateral.cpp)
+target_include_directories(falconbilateral PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
+target_link_libraries(falconbilateral ${catkin_LIBRARIES} ${LIBNIFALCON} ${DHDC})
+
 install(TARGETS fddeformationController
   RUNTIME DESTINATION lib/fddeformations
 )
@@ -50,4 +54,8 @@ install(TARGETS falcondeformationController
 
 install(TARGETS fdbilateral
   RUNTIME DESTINATION lib/fdbilateral
+)
+
+install(TARGETS falconbilateral
+  RUNTIME DESTINATION lib/falconbilateral
 )
