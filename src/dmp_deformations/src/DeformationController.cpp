@@ -997,7 +997,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             array<double,4> q_surface;
             rotationToQuaternion(u_dir,v_dir,crossProduct(u_dir,v_dir),q_surface);
 
-            cout << "DEF: " << dmp_fx << " " <<  dmp_fy << " " << dmp_fz << endl;
+            //cout << "DEF: " << dmp_fx << " " <<  dmp_fy << " " << dmp_fz << endl;
 
             array<double,3> rotated_deformation = map_deformation_input(input_mapping_method,dmp_fx,dmp_fy,dmp_fz,dx,dy,dz,q_surface);
 
@@ -1147,11 +1147,17 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // TODO: fix all this stuff
-            dp_in_dir = 0.0;
+            //dp_in_dir = 0.0;
 
-            delta_s = 1.0+dp_in_dir;
+            delta_s = 1.0+1.3*dp_in_dir;
             cout << "DS:" << delta_s << endl;
             s+=delta_s;
+
+            cout << "S: " << s << endl;
+
+            if (s<0.0){
+                s = 0.0; // don't allow negative time
+            }
 
 
             /////////////////////////////////////////////////////
