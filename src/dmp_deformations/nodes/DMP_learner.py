@@ -98,6 +98,8 @@ def loadPresegmented(data):
 def calculateDMP(demonstration_data, segmentation, alignment_curves):
     print "Building DMPs"
     dmps = []
+    dmps_reverse = []
+
     variance_per_segment=[]
 
     # Write a CSV with the final trajectory which can be read and executed
@@ -116,11 +118,16 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
             dmp = DMP()
             dmps.append(dmp)
 
+            # Create a DMP for the reverse behavior
+            dmp_r = DMP()
+            dmps_reverse.append(dmp_r)
+
             sel_vec = segment[2]
             variances = segment[1]
             surface=segment[3]
 
             demonstration_per_dmp = []
+            reverse_demonstration_per_dmp = []
 
             # 3 Deformation Directions need calculations of variances
             var_x_temp = np.zeros((200, len(demonstration_data)))
@@ -144,8 +151,9 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
                     end_index = alignment_curves[yy][1][
                         int(np.round(np.median(np.where(alignment_curves[yy][0] == end_index))))]
 
-                    
                 temp = np.zeros((end_index-start_index,7))
+                temp_reverse = np.zeros((end_index-start_index,7))
+
                 # Get either forces or positions depending on selection vector
                 # First three are positions, 7-9 are forces (after quaternion)
                 temp[:, 0] = demo[start_index:end_index,0+7*(1-sel_vec[0])].reshape((end_index-start_index,))
@@ -156,6 +164,15 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
                 temp[:, 5] = demo[start_index:end_index,5].reshape((end_index - start_index,))
                 temp[:, 6] = demo[start_index:end_index,6].reshape((end_index - start_index,))
 
+                # Get the same things in reverse order to be learned for the reversible analog of the DMP!
+                temp_reverse[:, 0] = np.flip(demo[start_index:end_index, 0 + 7 * (1 - sel_vec[0])]).reshape((end_index - start_index,))
+                temp_reverse[:, 1] = np.flip(demo[start_index:end_index, 1 + 7 * (1 - sel_vec[1])]).reshape((end_index - start_index,))
+                temp_reverse[:, 2] = np.flip(demo[start_index:end_index, 2 + 7 * (1 - sel_vec[2])]).reshape((end_index - start_index,))
+                temp_reverse[:, 3] = np.flip(demo[start_index:end_index, 3]).reshape((end_index - start_index,))
+                temp_reverse[:, 4] = np.flip(demo[start_index:end_index, 4]).reshape((end_index - start_index,))
+                temp_reverse[:, 5] = np.flip(demo[start_index:end_index, 5]).reshape((end_index - start_index,))
+                temp_reverse[:, 6] = np.flip(demo[start_index:end_index, 6]).reshape((end_index - start_index,))
+
 
                 # ADD TO VARIANCE CALCULATION
                 # TODO: does this work whatsoever?
@@ -163,15 +180,9 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
                 var_y_temp[:,yy] = interpolation.zoom(demo[start_index:end_index,1 + 7 * (1 - sel_vec[1])],200.0/(end_index-start_index))
                 var_z_temp[:,yy] = interpolation.zoom(demo[start_index:end_index,2 + 7 * (1 - sel_vec[2])],200.0/(end_index-start_index))
 
-
-                # Positions for plotting
-                temp_pos = np.zeros((end_index-start_index,3))
-
-                # Get either forces or positions depending on selection vector
-                # First three are positions, second three are forces
-                temp_pos[:,:] = demo[start_index:end_index,0:3].reshape((end_index-start_index,3))
                 
                 demonstration_per_dmp.append(temp)
+                reverse_demonstration_per_dmp.append(temp_reverse)
 
 
             # Calculate the variances and store for later
@@ -188,10 +199,10 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
 
             dmps[xx].inputData(demonstration_data=demonstration_per_dmp)
             dmps[xx].computeDMP()
+            dmps_reverse[xx].inputData(demonstration_data=reverse_demonstration_per_dmp)
+            dmps_reverse[xx].computeDMP()
 
             trajectories = dmps[xx].getTrajectory()
-            zero_length = len(trajectories[0])
-
 
             # Figure out how long the demonstration should be based on max difference (velocity)
             # in kinematic directions and interpolate such that this is sent at 1000 Hz.
@@ -243,6 +254,8 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
 
             # Actually interpolate the forces
             starting_points, attractor_points, return_forces = dmps[xx].getForces()
+            starting_points_r, attractor_points_r, return_forces_r = dmps_reverse[xx].getForces()
+
 
             # First write mode to signal new DMP
             surface = segment[3]
@@ -270,6 +283,24 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
                     interp_qy = return_forces[4][ii]+(float(jj)/float(num_interp_pts))*(return_forces[4][ii + 1] - return_forces[4][ii])
                     interp_qz = return_forces[5][ii]+(float(jj)/float(num_interp_pts))*(return_forces[5][ii + 1] - return_forces[5][ii])
                     interp_qw = return_forces[6][ii]+(float(jj)/float(num_interp_pts))*(return_forces[6][ii + 1] - return_forces[6][ii])
+                    csvfile.write(str(interp_x)+','+str(interp_y)+','+str(interp_z)+','+str(interp_qx)+','+str(interp_qy)+','+str(interp_qz)+','+str(interp_qw))
+                    csvfile.write('\n')
+
+            # Write the reverse
+            csvfile.write('reverse' + ',' + '' + ',' + '')
+            csvfile.write('\n')
+            for ii in range(0,len(return_forces[0])-1):
+                # print trajectories[0][ii][0]
+                for jj in range(0,num_interp_pts):
+                    interp_x = return_forces_r[0][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[0][ii+1]-return_forces_r[0][ii])
+                    interp_y = return_forces_r[1][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[1][ii+1]-return_forces_r[1][ii])
+                    interp_z = return_forces_r[2][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[2][ii+1]-return_forces_r[2][ii])
+
+                    # TODO: This should be switched to SLERP for Orientation
+                    interp_qx = return_forces_r[3][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[3][ii + 1] - return_forces_r[3][ii])
+                    interp_qy = return_forces_r[4][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[4][ii + 1] - return_forces_r[4][ii])
+                    interp_qz = return_forces_r[5][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[5][ii + 1] - return_forces_r[5][ii])
+                    interp_qw = return_forces_r[6][ii]+(float(jj)/float(num_interp_pts))*(return_forces_r[6][ii + 1] - return_forces_r[6][ii])
                     csvfile.write(str(interp_x)+','+str(interp_y)+','+str(interp_z)+','+str(interp_qx)+','+str(interp_qy)+','+str(interp_qz)+','+str(interp_qw))
                     csvfile.write('\n')
 
