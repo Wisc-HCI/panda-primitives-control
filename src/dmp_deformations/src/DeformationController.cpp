@@ -363,7 +363,7 @@ void DeformationController::calculateDMPTransition(double ii, double &transition
             ros::spinOnce();
             try{
                 geometry_msgs::TransformStamped transformStamped;
-                transformStamped = tfBuffer.lookupTransform("panda_link0", "end_effector",ros::Time(0));
+                transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
                 actual_pos[0] = transformStamped.transform.translation.x;
                 actual_pos[1] = transformStamped.transform.translation.y;
                 actual_pos[2] = transformStamped.transform.translation.z;
@@ -642,16 +642,18 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     cout << "Force Onloading Complete..." << endl;
 }
 
-void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp){
+void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vector<vector<array<double,7>>> &dmps_reverse,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp){
     std::ifstream dmpfile(trajectoryFile);
     double junk;
     string temp;
     string surface;
 
     vector<array<double,7>> dmp_temp;
+    vector<array<double,7>> dmp_reverse_temp;
     vector<array<double,3>> dmp_variance_temp;
 
     bool loading_variances = false;
+    bool loading_reverse = false;
 
     // Read entire file into the vectors
     if(dmpfile.good())
@@ -666,6 +668,7 @@ void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vecto
                 // make this surface and stiffness (damping implied from overdamped)
 
                 loading_variances = false;
+                loading_reverse = false;
 
                 getline(dmpfile,temp,',');
                 surface = temp.c_str();
@@ -708,18 +711,26 @@ void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vecto
                 if(dmp_temp.size()>0)
                 {
                     dmps.push_back(dmp_temp);
+                    dmps_reverse.push_back(dmp_reverse_temp);
                     variance_dmp.push_back(dmp_variance_temp);
                 }
 
                 // Reinitialize the temporary vector
                 // to store the trajectory
                 dmp_temp.clear();
+                dmp_reverse_temp.clear();
                 dmp_variance_temp.clear();
             }
 
             else if(temp=="variance")
             {
                 loading_variances = true;
+                getline(dmpfile,temp);
+            }
+
+            else if(temp=="reverse")
+            {
+                loading_reverse = true;
                 getline(dmpfile,temp);
             }
 
@@ -732,6 +743,25 @@ void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vecto
                 getline(dmpfile,temp);
                 variance_temp[2] = atof(temp.c_str());
                 dmp_variance_temp.push_back(variance_temp);
+            }
+
+            else if(loading_reverse){
+                array<double,7> state_vector_temp;
+                // temp has first value already
+                state_vector_temp[0] = atof(temp.c_str());
+                getline(dmpfile,temp,',');
+                state_vector_temp[1] = atof(temp.c_str());
+                getline(dmpfile,temp,',');
+                state_vector_temp[2] = atof(temp.c_str());
+                getline(dmpfile,temp,',');
+                state_vector_temp[3] = atof(temp.c_str());
+                getline(dmpfile,temp,',');
+                state_vector_temp[4] = atof(temp.c_str());
+                getline(dmpfile,temp,',');
+                state_vector_temp[5] = atof(temp.c_str());
+                getline(dmpfile,temp);
+                state_vector_temp[6] = atof(temp.c_str());
+                dmp_reverse_temp.push_back(state_vector_temp);
             }
 
             else{ // Add new value to dmp_vector
@@ -752,13 +782,13 @@ void DeformationController::readDemo(vector<vector<array<double,7>>> &dmps,vecto
                 state_vector_temp[6] = atof(temp.c_str());
                 dmp_temp.push_back(state_vector_temp);
             }
-
         }
 
         // Publish the final dmp
         if(dmp_temp.size()>0)
         {
             dmps.push_back(dmp_temp);
+            dmps_reverse.push_back(dmp_reverse_temp);
             variance_dmp.push_back(dmp_variance_temp);
         }
     }
@@ -806,6 +836,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
     // All of the data from the DMPs are stored in vectors
     vector<vector<array<double,7>>> dmps;
+    vector<vector<array<double,7>>> dmps_reverse;
     vector<array<double,3>> selections;
     vector<array<double,7>> starting_points;
     vector<array<double,7>> attractor_points;
@@ -872,6 +903,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     }
 
     // TODO: check if there and wait!!!
+
     
 
     // Action: Tell the robot the replay is starting
