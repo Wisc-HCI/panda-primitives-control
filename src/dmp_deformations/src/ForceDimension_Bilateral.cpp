@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
 
     try{
          geometry_msgs::TransformStamped transformStamped;
-         transformStamped = tfBuffer.lookupTransform("panda_link0", "end_effector",ros::Time(0));
+         transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
          offsets[0] = transformStamped.transform.translation.x;
          offsets[1] = transformStamped.transform.translation.y;
          offsets[2] = transformStamped.transform.translation.z;
