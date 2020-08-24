@@ -36,6 +36,7 @@ class BSplineSurface{
         
         // Evaluates a parameterized point (U,V) and returns 3D location and normal vector
         void calculateSurfacePoint(double u, double v, array<double,3> &r, array<double,3> &n_hat, array<double,3> &r_u, array<double,3> &r_v);
+        void calculateSurfacePointOnly(double u, double v, array<double,3> &r);
         
         // Read and write surfaces as CSV files
         void loadSurface(string filename);

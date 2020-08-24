@@ -57,6 +57,23 @@ void BSplineSurface::get_uv_dirs(array<double,3> &u_dir , array<double,3> &v_dir
     v_dir = v_dir_plane;
 }
 
+
+void BSplineSurface::calculateSurfacePointOnly(double u, double v, array<double,3> &r){
+    r = {0.0, 0.0, 0.0};
+    ///////////////////////////////////////////////
+    //   Calculate the interpolated point        //
+    ///////////////////////////////////////////////
+
+    for(int ii=0;ii<(m+1);ii++){
+        for(int jj=0;jj<(n+1);jj++){
+            for(int xyz=0; xyz<3; xyz++)
+            {
+                r[xyz]+=getN(ii,k,u,knots_u)*getN(jj,k,v,knots_v)*control_pts.at(ii).at(jj)[xyz];
+            }
+        }
+    }
+}
+
 void BSplineSurface::calculateSurfacePoint(double u, double v, array<double,3> &r, array<double,3> &n_hat, array<double,3> &r_u, array<double,3> &r_v){
     r = {0.0, 0.0, 0.0};
     //cout << "STARTING" << endl;

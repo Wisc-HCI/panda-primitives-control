@@ -44,6 +44,10 @@ add_executable(falconbilateral src/Falcon_Bilateral.cpp)
 target_include_directories(falconbilateral PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
 target_link_libraries(falconbilateral ${catkin_LIBRARIES} ${LIBNIFALCON} ${DHDC})
 
+add_executable(falconVF src/Falcon_VF_surface.cpp)
+target_include_directories(falconVF PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
+target_link_libraries(falconVF ${catkin_LIBRARIES} ${LIBNIFALCON} ${DHDC} ${BSpline} ${NLopt})
+
 install(TARGETS fddeformationController
   RUNTIME DESTINATION lib/fddeformations
 )
@@ -58,4 +62,8 @@ install(TARGETS fdbilateral
 
 install(TARGETS falconbilateral
   RUNTIME DESTINATION lib/falconbilateral
+)
+
+install(TARGETS falconVF
+  RUNTIME DESTINATION lib/falconVF
 )
