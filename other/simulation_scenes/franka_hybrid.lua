@@ -207,9 +207,6 @@ function sysCall_init()
         subscriberHybrid = simROS.subscribe('/panda/hybrid_pose','panda_ros_msgs/HybridPose','getDesiredHybrid')
     end
     
-    --sim.setObjectPosition(targetDummy,-1,{desired_x_total, desired_y_total, desired_z_total})
-    --sim.setObjectOrientation(targetDummy,-1,{0.0, 0.0, 0.0})
-    
 end
 
 function sysCall_actuation()
@@ -253,11 +250,6 @@ function sysCall_actuation()
         }
     }
     
-    --print("F:",ft.force.x,ft.force.y,ft.force.z)
-    
-    print("RI",vectorOutOfConstraintFrame(-0.0882737,0.098876,-0.68847,0.71304,0.2653,0.3634,0.15644))
-    
-    
     simROS.publish(ft_publisher,ft_reaction)
     
     
@@ -286,19 +278,13 @@ function sysCall_actuation()
     -- rotate back into the global robot frame
     desired_x_total,desired_y_total,desired_z_total = vectorOutOfConstraintFrame(cqx,cqy,cqz,cqw,desired_x_total,desired_y_total,desired_z_total)
     
-    
-    -- rotate the desired orientation (which is in the constraint frame) back to the global frame       
-    -- We are saying q_local = (CF)*q -> q = (CF)^-1*q_local (q_local is typically the identity)
-    -- Quaternion inverse
-    icqx = -cqx
-    icqy = -cqy
-    icqz = -cqz
-    icqw = cqw
-    
-    final_qw=icqw*desired_qw-icqx*desired_qx-icqy*desired_qy-icqz*desired_qz
-    final_qx=icqw*desired_qx+icqx*desired_qw-icqy*desired_qz+icqz*desired_qy
-    final_qy=icqw*desired_qy+icqx*desired_qz+icqy*desired_qw-icqz*desired_qx
-    final_qz=icqw*desired_qz-icqx*desired_qy+icqy*desired_qx+icqz*desired_qw
+    -- The orientation is local (in the constraint frame). Rotate out of the constraint frame using quaternion multiplication
+    -- https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
+    -- q_global = q_CF * q_local
+    final_qw = desired_qw*cqw-desired_qx*cqx-desired_qy*cqy-desired_qz*cqz
+    final_qx = desired_qw*cqx+desired_qx*cqw-desired_qy*cqz+desired_qz*cqy
+    final_qy = desired_qw*cqy+desired_qx*cqz+desired_qy*cqw-desired_qz*cqx
+    final_qz = desired_qw*cqz-desired_qx*cqy+desired_qy*cqx+desired_qz*cqw
     
     sim.setObjectPosition(targetDummy,-1,{desired_x_total, desired_y_total, desired_z_total})
     sim.setObjectQuaternion(targetDummy,-1,{final_qx, final_qy, final_qz, final_qw})
