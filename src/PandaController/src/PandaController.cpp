@@ -152,7 +152,7 @@ namespace PandaController {
         return output;
     }
 
-    franka::JointVelocities hybridControlLoop(const franka::RobotState& robot_state, Eigen::VectorXd command) {
+    franka::JointPositions hybridControlLoop(const franka::RobotState& robot_state, Eigen::VectorXd command) {
         // Panda hybrid controller using an admittance type architecture -> ultimately commanded as a P-law on
         // joint velocities
 
@@ -208,9 +208,19 @@ namespace PandaController {
 
 
         constrainForces(v_hybrid_expanded, robot_state);
-        Eigen::VectorXd jointVelocities = Eigen::Map<Eigen::MatrixXd>(readJacobian().data(), 6, 7).completeOrthogonalDecomposition().solve(v_hybrid_expanded);
-        
-        franka::JointVelocities output = {
+        //Eigen::VectorXd jointVelocities = Eigen::Map<Eigen::MatrixXd>(readJacobian().data(), 6, 7).completeOrthogonalDecomposition().solve(v_hybrid_expanded);
+        //
+        //franka::JointVelocities output = {
+        //    jointVelocities[0], 
+        //    jointVelocities[1], 
+        //    jointVelocities[2], 
+        //    jointVelocities[3], 
+        //    jointVelocities[4], 
+        //    jointVelocities[5], 
+        //    jointVelocities[6]
+        //};
+        auto jointVelocities = PandaController::getNextJointAngles(robot_state, v_hybrid_expanded.topRows(3), v_hybrid_expanded.bottomRows(3));
+        franka::JointPositions output = {{
             jointVelocities[0], 
             jointVelocities[1], 
             jointVelocities[2], 
@@ -218,7 +228,7 @@ namespace PandaController {
             jointVelocities[4], 
             jointVelocities[5], 
             jointVelocities[6]
-        };
+        }};
         return output;
     }
 
@@ -269,9 +279,9 @@ namespace PandaController {
                 // case TrajectoryType::Joint:
                 //     velocities = jointPositionControlLoop(robot_state, command);
                 //     break;
-                // case TrajectoryType::Hybrid:
-                //     velocities = hybridControlLoop(robot_state, command);
-                //     break;
+                case TrajectoryType::Hybrid:
+                    velocities = hybridControlLoop(robot_state, command);
+                    break;
             }
             setTargetJointVelocity(velocities);
         }
