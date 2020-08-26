@@ -25,6 +25,7 @@ namespace PandaController {
         thread ft_listener;
         thread controller;
         thread gripper;
+        thread franka_control;
         bool running = false;
         
     } 
@@ -113,37 +114,9 @@ namespace PandaController {
         writeCommandedPosition(positionArray);
     }
 
-    franka::JointVelocities positionControlLoop(const franka::RobotState& robot_state, Eigen::VectorXd commandedPosition) {
-
-        Eigen::Affine3d transform(getEETransform());
-        Eigen::Vector3d position(transform.translation());
-        Eigen::Quaterniond orientation(transform.linear());
-        orientation.normalize();
-        
-        EulerAngles desired_a;
-        desired_a.roll = commandedPosition[3];
-        desired_a.pitch = commandedPosition[4];
-        desired_a.yaw = commandedPosition[5];
-        auto current_a = quaternionToEuler(orientation);
-        Eigen::Quaterniond desired_q=eulerToQuaternion(desired_a);
-        
-        Eigen::Quaterniond difference(desired_q*orientation.inverse());
-        
-        EulerAngles difference_a = quaternionToEuler(difference.normalized());
-
-        double scaling_factor = 5;
-        double v_x = (commandedPosition[0] - position[0]) * scaling_factor;
-        double v_y = (commandedPosition[1] - position[1]) * scaling_factor;
-        double v_z = (commandedPosition[2] - position[2]) * scaling_factor;
-        double v_roll = difference_a.roll * scaling_factor;
-        double v_pitch = difference_a.pitch * scaling_factor;
-        double v_yaw = difference_a.yaw * scaling_factor;
-        Eigen::VectorXd v(6);
-        v << v_x, v_y, v_z, v_roll, v_pitch, v_yaw;
-
-        constrainForces(v, robot_state);
-        Eigen::VectorXd jointVelocities = Eigen::Map<Eigen::MatrixXd>(readJacobian().data(), 6, 7).completeOrthogonalDecomposition().solve(v);
-        franka::JointVelocities output = {{
+    franka::JointPositions positionControlLoop(const franka::RobotState& robot_state, Eigen::VectorXd commandedPosition) {
+        auto jointVelocities = PandaController::getNextJointAngles(robot_state, commandedPosition.topRows(3), commandedPosition.bottomRows(3));
+        franka::JointPositions output = {{
             jointVelocities[0], 
             jointVelocities[1], 
             jointVelocities[2], 
@@ -280,52 +253,56 @@ namespace PandaController {
         return velocities;
     }
 
-    franka::JointVelocities controlLoop(int & iteration,
+    void controlLoop() {
+        while (isRunning()) {
+            TrajectoryType t;
+            Eigen::VectorXd command = getNextCommand(t);
+            auto robot_state = readRobotState();
+            franka::JointPositions velocities = getTargetJointVelocity();
+            switch (t) {
+                case TrajectoryType::Cartesian:
+                    velocities = positionControlLoop(robot_state, command);
+                    break;
+                // case TrajectoryType::Velocity:
+                //     velocities = velocityControlLoop(robot_state, command);
+                //     break;
+                // case TrajectoryType::Joint:
+                //     velocities = jointPositionControlLoop(robot_state, command);
+                //     break;
+                // case TrajectoryType::Hybrid:
+                //     velocities = hybridControlLoop(robot_state, command);
+                //     break;
+            }
+            setTargetJointVelocity(velocities);
+        }
+    }
+
+    franka::JointVelocities frankaControlLoop(int & iteration,
                                         const franka::RobotState& robot_state, franka::Duration duration) {
         PandaController::writeRobotState(robot_state);
-        TrajectoryType t;
-        Eigen::VectorXd command = getNextCommand(t);
-        franka::JointVelocities velocities{0,0,0,0,0,0,0};
-        switch (t) {
-            case TrajectoryType::Cartesian:
-                velocities = positionControlLoop(robot_state, command);
-                break;
-            case TrajectoryType::Velocity:
-                velocities = velocityControlLoop(robot_state, command);
-                break;
-            case TrajectoryType::Joint:
-                velocities = jointPositionControlLoop(robot_state, command);
-                break;
-            case TrajectoryType::Hybrid:
-                velocities = hybridControlLoop(robot_state, command);
-                break;
-        }
-        iteration++;
+        franka::JointPositions q = getTargetJointVelocity();
+
+        auto jointVelocities = 3 * (Eigen::Map<Eigen::VectorXd>(q.q.data(), 7) - Eigen::Map<const Eigen::VectorXd>(robot_state.q.data(), 7));
+
+        franka::JointVelocities velocities{
+            jointVelocities[0], 
+            jointVelocities[1], 
+            jointVelocities[2], 
+            jointVelocities[3], 
+            jointVelocities[4], 
+            jointVelocities[5], 
+            jointVelocities[6]
+        };
+
         if (!isRunning()) {
             return franka::MotionFinished(velocities);
-        }
-        if (iteration < 5) {
-            return {0,0,0,0,0,0,0};
         }
         return velocities;
     }
 
-    void simulateControl(franka::Robot & robot) {
-        auto state = robot.readOnce();
-        franka::JointVelocities velocities{0,0,0,0,0,0,0};
-        int iteration = 0;
-        auto innerLoop = bind(controlLoop, iteration, std::placeholders::_1, std::placeholders::_2);
-        do {
-            velocities = innerLoop(state, franka::Duration(1));
-            state.dq = velocities.dq;
-            Eigen::Map<Eigen::VectorXd>(state.q.data(), 7) = Eigen::Map<Eigen::VectorXd>(state.q.data(), 7) + 0.001*Eigen::Map<Eigen::VectorXd>(state.dq.data(), 7);
-            Eigen::Map<Eigen::Matrix4d>(state.O_T_EE.data()) = getEETransform();//calculatePandaEE(state.q);
-        } while (!velocities.motion_finished);
-    }
-
     void robotControl(franka::Robot & robot) {
         int iteration = 0;
-        robot.control(bind(controlLoop, iteration, std::placeholders::_1, std::placeholders::_2));
+        robot.control(bind(frankaControlLoop, iteration, std::placeholders::_1, std::placeholders::_2));
     }
 
     void resetRobot(franka::Robot & robot) {
@@ -341,9 +318,19 @@ namespace PandaController {
         try {
             franka::Robot robot(ip, franka::RealtimeConfig::kIgnore);
             resetRobot(robot);
-            writeRobotState(robot.readOnce());
-            auto control = simulate ? simulateControl : robotControl;
-            control(robot);
+            auto state = robot.readOnce();
+            writeRobotState(state);
+            setTargetJointVelocity({
+                state.q[0],
+                state.q[1],
+                state.q[2],
+                state.q[3],
+                state.q[4],
+                state.q[5],
+                state.q[6]
+            });
+            franka_control = thread(robotControl, std::ref(robot));
+            controlLoop();
         } catch(const exception& e) {
             cout << e.what() << endl;
         }

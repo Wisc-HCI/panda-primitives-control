@@ -14,6 +14,7 @@ find_package(Boost REQUIRED)
 find_library(LIBNIFALCON nifalcon RECOMMENDED)
 find_library(DHDC libdhd.so.3.8.0 RECOMMENDED)
 find_library(DRDC libdrd.so.3.8.0 RECOMMENDED)
+find_library(nlopt REQUIRED)
 
 add_library(common SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/Common.cpp)
 target_link_libraries(common PUBLIC franka)
@@ -27,7 +28,7 @@ add_library(PandaController SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/PandaControllerAccessors.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Kinematics.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Trajectory.cpp)
-target_link_libraries(PandaController PUBLIC common franka boost_system)
+target_link_libraries(PandaController PUBLIC common franka boost_system nlopt)
 target_include_directories(PandaController PUBLIC ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 list(APPEND installTargets PandaController)
 

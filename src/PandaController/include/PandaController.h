@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include <franka/robot.h>
 #include <franka/robot_state.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
@@ -63,6 +64,9 @@ namespace PandaController {
 
     void forceTorqueListener();
     void setKinematicChain(KinematicChain chain = KinematicChain::PandaFlange, EELink link = EELink::PandaGripper);
+    Eigen::VectorXd getNextJointAngles(const franka::RobotState & state, Eigen::Vector3d ee_pos, Eigen::Vector3d ee_angles);
+    franka::JointPositions getTargetJointVelocity();
+    void setTargetJointVelocity(franka::JointPositions);
 
 } //end namespace PandaController
 
