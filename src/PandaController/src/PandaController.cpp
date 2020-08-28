@@ -216,8 +216,7 @@ namespace PandaController {
         double v_z_CF = selection_vector[2]*(commandedPosition[2] - currentPositionCF[2]) * scaling_factor + (1-selection_vector[2])*Kfp*(commandedForce[2]+currentForceCF[2]);
         
         // Rotate the desired orientation and cartesian velocity (difference) out of the constraint frame
-        // TODO: MH WHAT?! WHY DOES THIS HAVE TO BE INVERTED!!!!
-        Eigen::Quaterniond desired_q = constraint_frame.inverse() * desired_qCF;     
+        Eigen::Quaterniond desired_q = constraint_frame * desired_qCF;     
         Eigen::Vector3d v_CF;
         v_CF << v_x_CF, v_y_CF, v_z_CF;
         Eigen::Vector3d v_global = constraint_frame * v_CF;
