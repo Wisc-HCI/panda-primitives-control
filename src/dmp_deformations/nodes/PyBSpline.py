@@ -190,10 +190,10 @@ class BSplineSurface:
                 csvfile.write('\n')
 
             # write u and v directions
-            csvfile.write(str(self.u_dir[0]) + ' ' + str(self.u_dir[1]) + ' ' +
+            csvfile.write(str(self.u_dir[0]) + ',' + str(self.u_dir[1]) + ',' +
             str(self.u_dir[2]) + ',')
             csvfile.write('\n')
-            csvfile.write(str(self.v_dir[0]) + ' ' + str(self.v_dir[1]) + ' ' +
+            csvfile.write(str(self.v_dir[0]) + ',' + str(self.v_dir[1]) + ',' +
             str(self.v_dir[2]) + ',')
             csvfile.write('\n')
 
