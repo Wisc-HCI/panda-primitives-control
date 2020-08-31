@@ -1,22 +1,27 @@
 #!/usr/bin/env python
 import numpy as np
+import matplotlib.pyplot as plt
 import PyBSpline
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 import rospkg
 
 
-def printCircularSection(csvfile, starting_point, ending_point, radius, frequency, num_pts):
+def printCircularSection(csvfile, starting_point, ending_point, num_pts, radius, frequency):
     # Set up interpolation of the quaternions
     key_inds = [0, num_pts - 1];
     key_rots = R.from_quat(np.array([[starting_point[3], starting_point[4], starting_point[5], starting_point[6]],
                                      [ending_point[3], ending_point[4], ending_point[5], ending_point[6]]]))
+
+
+    pts = []
+
     slerp = Slerp(key_inds, key_rots)
 
     for ii in range(0, num_pts):
         # Position
-        interp_x = starting_point[0] + (ending_point[0] - starting_point[0]) * (float(ii) / float(num_pts - 1)) + radius*np.sin(frequency*float(ii)/num_pts)
-        interp_y = starting_point[1] + (ending_point[1] - starting_point[1]) * (float(ii) / float(num_pts - 1)) + radius*np.cos(frequency*float(ii)/num_pts)
+        interp_x = starting_point[0] + (ending_point[0] - starting_point[0]) * (float(ii) / float(num_pts - 1)) + ((float(ii)/num_pts<0.1)*(float(ii)/(0.1*num_pts))+float((float(ii)/num_pts>=0.1))+(float(ii)/num_pts>0.9)*(-10.0*(float(ii)/num_pts-0.9)))*radius*np.sin(frequency*float(ii)/num_pts)
+        interp_y = starting_point[1] + (ending_point[1] - starting_point[1]) * (float(ii) / float(num_pts - 1)) + ((float(ii)/num_pts<0.1)*(float(ii)/(0.1*num_pts))+float((float(ii)/num_pts>=0.1))+(float(ii)/num_pts>0.9)*(-10.0*(float(ii)/num_pts-0.9)))*radius*np.cos(frequency*float(ii)/num_pts)
         interp_z = starting_point[2] + (ending_point[2] - starting_point[2]) * (float(ii) / float(num_pts - 1))
 
         # Orientation
@@ -42,7 +47,12 @@ def printCircularSection(csvfile, starting_point, ending_point, radius, frequenc
                       + str(interp_tx) + ',' + str(interp_ty) + ',' + str(interp_tz))
         csvfile.write('\n')
 
+        #print(interp_x,interp_y)
+        pts.append((interp_x, interp_y))
 
+    pts = np.array(pts)
+    plt.plot(pts[:,0],pts[:,1])
+    plt.show()
 
 def printPathSection(csvfile,starting_point,ending_point,num_pts):
 
@@ -254,7 +264,7 @@ def layup2():
             # END OF PASS
 
 
-def cowling1():
+def cowling4():
     # Number of points per section
     num_pts = 100
     rospack = rospkg.RosPack()
@@ -264,76 +274,58 @@ def cowling1():
     ##########################################################
     with open(path_devel + 'cowling1_execution.csv', 'w') as csvfile:
         surfaceModel = PyBSpline.BSplineSurface()
-        surfaceModel.loadSurface("layup2")
+        surfaceModel.loadSurface("cowling4")
 
-        csvfile.write(
-            ",layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,")
+        csvfile.write(",cowling4,,")
         csvfile.write('\n')
-        csvfile.write(
-            "0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900")
+        csvfile.write("0,100,200")
         csvfile.write('\n')
-        csvfile.write("1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1")
+        csvfile.write("1,0,1")
         csvfile.write('\n')
-        # csvfile.write("2 2 2,3 10 150,2 2 2")
-        csvfile.write(
-            "2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2")
+        csvfile.write("2 2 2,5 5 150,2 2 2")
         csvfile.write('\n')
 
-        homing_point = np.array([0.6, -0.3, 0.20])
-        homing_point_2 = np.array([0.52, 0.1, 0.20])
+        homing_point = np.array([0.45, -0.3, 0.20])
+        q_straight = np.array([0.7071068, 0.0, 0.0, 0.7071068])
         force = -5.0
 
-        for ii in np.arange(0.95, 0.004, -0.1):
-            print("ii", ii)
-            # START OF PASS
-            surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(ii, 0.98)
-            print('SS:', surface_start)
+        # START OF PASS
+        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.2,0.2)
 
-            starting_vel = r_u * 0.0 + r_v * -1.0
-            starting_vel = starting_vel / np.linalg.norm(starting_vel)
-            starting_y = np.cross(normal_start, starting_vel)
-            qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
+        starting_vel = r_u * 0.0 + r_v * 1.0
+        starting_vel = starting_vel / np.linalg.norm(starting_vel)
+        starting_y = np.cross(normal_start, starting_vel)
+        qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-            above_surf = surface_start + 0.03 * normal_start
+        above_surf = surface_start + 0.03 * normal_start
 
-            printPathSection(csvfile, np.array(
-                [homing_point[0], homing_point[1], homing_point[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0,
-                 0.0]),
-                             np.array(
-                                 [above_surf[0], above_surf[1], above_surf[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force,
-                                  0.0, 0.0, 0.0]), num_pts)
+        printPathSection(csvfile, np.array(
+            [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+             0.0]),
+                         np.array(
+                             [above_surf[0], above_surf[1], above_surf[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force,
+                              0.0, 0.0, 0.0]), num_pts)
 
-            # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-            printPathSection(csvfile, np.array([ii, 0.98, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                             np.array([ii, 0.02, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts)
+        # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
+        printCircularSection(csvfile, np.array([0.2, 0.2, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+                         np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.02,10)
 
-            surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(ii, 0.02)
-            ending_vel = r_u * 0.0 + r_v * -1.0
-            ending_vel = ending_vel / np.linalg.norm(ending_vel)
-            ending_y = np.cross(normal_end, ending_vel)
-            qx_e, qy_e, qz_e, qw_e = calculateQuaternion(normal_end, ending_vel, ending_y)
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.6)
+        ending_vel = r_u * 0.0 + r_v * 1.0
+        ending_vel = ending_vel / np.linalg.norm(ending_vel)
+        ending_y = np.cross(normal_end, ending_vel)
+        qx_e, qy_e, qz_e, qw_e = calculateQuaternion(normal_end, ending_vel, ending_y)
 
-            printPathSection(csvfile, np.array(
-                [surface_end[0], surface_end[1], surface_end[2], qx_e, qy_e, qz_e, qw_e, 0.0, 0.0, -5.0, 0.0, 0.0,
-                 0.0]),
-                             np.array(
-                                 [homing_point_2[0], homing_point_2[1], homing_point_2[2], qx_s, qy_s, qz_s, qw_s, 0.0,
-                                  0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
-
-            printPathSection(csvfile, np.array(
-                [homing_point_2[0], homing_point_2[1], homing_point_2[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, -5.0, 0.0,
-                 0.0,
-                 0.0]),
-                             np.array(
-                                 [homing_point[0], homing_point[1], homing_point[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0,
-                                  -5.0, 0.0,
-                                  0.0, 0.0]), num_pts)
-            # END OF PASS
+        printPathSection(csvfile, np.array(
+            [surface_end[0], surface_end[1], surface_end[2], qx_e, qy_e, qz_e, qw_e, 0.0, 0.0, -5.0, 0.0, 0.0,
+             0.0]),
+                         np.array(
+                             [homing_point[0], homing_point[1], homing_point[2], qx_s, qy_s, qz_s, qw_s, 0.0,
+                              0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
 
 
 def main():
-
-
+    layup2()
 
 
 
