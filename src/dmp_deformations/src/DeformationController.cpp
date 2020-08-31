@@ -35,6 +35,7 @@ using namespace std::chrono;
 class DeformationController{
     private:
         array<double, 3> actual_pos;
+        array<double, 4> actual_orientation;
         tf2_ros::Buffer tfBuffer;
       
         // For recording
@@ -51,6 +52,7 @@ class DeformationController{
 
         // General robotics mathematical operations
         array<double,3> crossProduct(array<double,3> x, array<double,3> y);
+        array<double,4> slerp(array<double,4> q_start, array<double,4> q_end,double x);
         array<double,3> vectorIntoConstraintFrame(double x, double y, double z, double qx, double qy, double qz, double qw);
         array<double,3> vectorOutOfConstraintFrame(double x, double y, double z, double qx, double qy, double qz, double qw);
         void rotationToQuaternion(array<double,3> x_hat, array<double,3> y_hat, array<double,3>z_hat, array<double,4> &q_out);
@@ -65,7 +67,7 @@ class DeformationController{
         array<double,3> getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v );
         array<double,3> map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz, array<double,4> q_out);
         void forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub);
-        void readDemo(vector<vector<array<double,7>>> &dmps,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp);
+        void readDemo(vector<vector<array<double,7>>> &dmps,vector<vector<array<double,7>>> &dmps_reverse,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp);
         void replay_demo(ros::NodeHandle n);
         void actualPose(geometry_msgs::Pose pose);
         void readPandaForces(geometry_msgs::Wrench wrench);
@@ -124,6 +126,63 @@ array<double,3> DeformationController::crossProduct(array<double,3> x, array<dou
     return_vec[1]=x[2]*y[0]-x[0]*y[2];
     return_vec[2]=x[0]*y[1]-x[1]*y[0];
     return return_vec;
+}
+
+/**
+* Orientation interpolation
+* based on https://en.wikipedia.org/wiki/Slerp
+* interpolation, x, is 0 to 1 bounded
+*/
+array<double,4> DeformationController::slerp(array<double,4> q_start, array<double,4> q_end,double x){
+    array<double,4> q_interp;
+    
+    // Make sure quaterions are properly normalized
+    double mag_q_start = sqrt(q_start[0]*q_start[0]+q_start[1]*q_start[1]+q_start[2]*q_start[2]+q_start[3]*q_start[3]);
+    q_start[0] = q_start[0]/mag_q_start; q_start[1] = q_start[1]/mag_q_start;
+    q_start[2] = q_start[2]/mag_q_start; q_start[3] = q_start[3]/mag_q_start;
+
+    double mag_q_end = sqrt(q_end[0]*q_end[0]+q_end[1]*q_end[1]+q_end[2]*q_end[2]+q_end[3]*q_end[3]);
+    q_end[0] = q_end[0]/mag_q_end; q_end[1] = q_end[1]/mag_q_end;
+    q_end[2] = q_end[2]/mag_q_end; q_end[3] = q_end[3]/mag_q_end;
+    
+    // Compute the cosine of the angle between the two vectors.
+    // dot product for quaternions is normal vector inner product
+    double dot = q_start[0]*q_end[0]+q_start[1]*q_end[1]+q_start[2]*q_end[2]+q_start[3]*q_end[3];
+
+    // make sure the shorter path is chosen
+    if (dot < 0.0f) {
+        q_end[0] = -q_end[0]; q_end[1] = -q_end[1]; q_end[2] = -q_end[2]; q_end[3] = -q_end[3];
+        dot = -dot;
+    }
+
+    const double DOT_THRESHOLD = 0.9995;
+    if (dot > DOT_THRESHOLD) {
+        // for close vectors, linear interpolation
+        q_interp[0] = q_start[0]+x*(q_end[0]-q_start[0]);
+        q_interp[1] = q_start[1]+x*(q_end[1]-q_start[1]);
+        q_interp[2] = q_start[2]+x*(q_end[2]-q_start[2]);
+        q_interp[3] = q_start[3]+x*(q_end[3]-q_start[3]);
+        
+        double mag_q_interp = sqrt(q_interp[0]*q_interp[0]+q_interp[1]*q_interp[1]+q_interp[2]*q_interp[2]+q_interp[3]*q_interp[3]);
+        q_interp[0] = q_interp[0]/mag_q_interp; q_interp[1] = q_interp[1]/mag_q_interp;
+        q_interp[2] = q_interp[2]/mag_q_interp; q_interp[3] = q_interp[3]/mag_q_interp;
+        return q_interp;
+    }
+
+    double theta_0 = acos(dot);
+    double theta = theta_0*x;
+    double sin_theta = sin(theta);
+    double sin_theta_0 = sin(theta_0);
+
+    double s0 = cos(theta) - dot * sin_theta / sin_theta_0;
+    double s1 = sin_theta / sin_theta_0;
+
+    q_interp[0] = s0*q_start[0]+s1*q_end[0];
+    q_interp[1] = s0*q_start[1]+s1*q_end[1];
+    q_interp[2] = s0*q_start[2]+s1*q_end[2];
+    q_interp[3] = s0*q_start[3]+s1*q_end[3];
+
+    return q_interp;
 }
 
 /**
@@ -219,7 +278,7 @@ void DeformationController::rotationToQuaternion(array<double,3> x_hat, array<do
 
     // Make sure it is normalized
     double mag = sqrt(q_out[0]*q_out[0]+q_out[1]*q_out[1]+q_out[2]*q_out[2]+q_out[3]*q_out[3]);
-    q_out[0] = q_out[0]/mag; q_out[1] = q_out[1]/mag; q_out[2] = q_out[2]/mag; q_out[3] = q_out[3]/mag;
+    q_out[0] = -q_out[0]/mag; q_out[1] = -q_out[1]/mag; q_out[2] = -q_out[2]/mag; q_out[3] = q_out[3]/mag;
 }
 
 ////////////////////////////
@@ -521,7 +580,11 @@ array<double,3> DeformationController::map_deformation_input(int method, double 
         // Task-Oriented Frame
         /////////////////
         // This quaternion rotates it to be aligned with the general camera/x-y directions
+        // rotating global into the u-v frame -> q_uv ^-1 * def_global
+        
         deformation_rotation = vectorIntoConstraintFrame(dmp_fx, dmp_fy, dmp_fz, q_surface[0], q_surface[1], q_surface[2], q_surface[3]);
+        // cout << "INPUT:" << dmp_fx << " " << dmp_fy << " " << dmp_fz << endl;
+        // cout << "INPUTR:" << deformation_rotation[0] << " " << deformation_rotation[1] << " " << deformation_rotation[2] << endl;
         return deformation_rotation;
     }
 
@@ -588,13 +651,15 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     // Calculate the starting point for orientation based on the first velocity of the DMP
     array<double,3> vel_hat = getFirstSurfaceVelocity(attractor_points[ii],starting_points[ii],dmps[ii][0][0],dmps[ii][0][1],x_hat,y_hat);
 
+    cout << "VELHAT" << vel_hat[0] << vel_hat[1] << vel_hat[2] << endl;
+
     // Z (normal) x X (vel) = +Y
     array<double,3> y_new = crossProduct(n_hat,vel_hat);
 
     geometry_msgs::Quaternion constraint_frame; 
-    array<double,4> q_out;               
+    array<double,4> q_out; 
+
     rotationToQuaternion(vel_hat,y_new,n_hat,q_out);
-    // rotationToQuaternion(x_hat,y_hat,n_hat,q_out);
     constraint_frame.x = q_out[0]; constraint_frame.y = q_out[1]; constraint_frame.z = q_out[2]; constraint_frame.w = q_out[3];
 
     // Convert the XYZ into the constraint frame
@@ -852,7 +917,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     double k=50;
     double b=sqrt(2*k); // ideal underdamped
     double b_def=2*sqrt(k); // overdamped
-    readDemo(dmps,selections,starting_points,attractor_points,surfaces,variance_dmp);
+    readDemo(dmps,dmps_reverse,selections,starting_points,attractor_points,surfaces,variance_dmp);
 
     // Action: Tell the robot the replay is starting over
     // In case something needs to change or be reset in the simulation state
@@ -873,6 +938,10 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         actual_pos[0] = transformStamped.transform.translation.x;
         actual_pos[1] = transformStamped.transform.translation.y;
         actual_pos[2] = transformStamped.transform.translation.z;
+        actual_orientation[0] = transformStamped.transform.rotation.x;
+        actual_orientation[1] = transformStamped.transform.rotation.y;
+        actual_orientation[2] = transformStamped.transform.rotation.z;
+        actual_orientation[3] = transformStamped.transform.rotation.w;
     }
 
     catch(tf2::TransformException &ex){
@@ -891,6 +960,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     hybridPose.constraint_frame = constraint_frame;
     hybridPose.sel_vector = {1, 1, 1, 1, 1, 1};
 
+    array<double,4> starting_orientation = {starting_points[0][3], starting_points[0][4], starting_points[0][5], starting_points[0][6]};
+
     // Interpolate over the course of 2 seconds to starting position
     for(int jj=0; jj<2000; jj++)
     {
@@ -898,6 +969,14 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         hybridPose.pose.position.x = xs+(starting_points[0][0]-xs)*((jj*1.0)/2000.0);
         hybridPose.pose.position.y = ys+(starting_points[0][1]-ys)*((jj*1.0)/2000.0);
         hybridPose.pose.position.z = zs+(starting_points[0][2]-zs)*((jj*1.0)/2000.0);
+
+        // interpolate orientation
+        array<double,4> interpq = slerp(actual_orientation,starting_orientation,(jj*1.0)/2000.0);
+        hybridPose.pose.orientation.x = interpq[0];
+        hybridPose.pose.orientation.y = interpq[1];
+        hybridPose.pose.orientation.z = interpq[2];
+        hybridPose.pose.orientation.w = interpq[3];
+
         hybrid_pub.publish(hybridPose);
         usleep(1000);
     }
@@ -943,7 +1022,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         else{
             // surface scaling is 1.0
             u_dir = {1.0, 0.0, 0.0};
-            v_dir = {1.0, 0.0, 0.0};
+            v_dir = {0.0, 1.0, 0.0};
 
             surface_scaling_x = 1.0; surface_scaling_y = 1.0;
         }
@@ -990,16 +1069,13 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double s = 0; // phase variable used for time
         double delta_s = 1.0;
 
+        bool signCorrection = false;
+        double dir_x, dir_y;
+        double dx_old, dy_old;
+
         // Now replay the entirety of the demonstration
         while(s<dmps[ii].size()){
             ros::spinOnce();
-
-            // Interpolate each of the applied forces for the non-integer value s
-            // TODO: this isn't right and once fixed, will also fail for the final sample
-            double dmp_x = dmps[ii][(int)floor(s)][0]+(dmps[ii][(int)ceil(s)][0]-dmps[ii][(int)floor(s)][0])*(s-floor(s));
-            double dmp_y = dmps[ii][(int)floor(s)][1]+(dmps[ii][(int)ceil(s)][1]-dmps[ii][(int)floor(s)][1])*(s-floor(s));
-            double dmp_z = dmps[ii][(int)floor(s)][2]+(dmps[ii][(int)ceil(s)][2]-dmps[ii][(int)floor(s)][2])*(s-floor(s));
-
             double var_x = variance_dmp[ii][(int)floor(s)][0]+(variance_dmp[ii][(int)ceil(s)][0]-variance_dmp[ii][(int)floor(s)][0])*(s-floor(s));
             double var_y = variance_dmp[ii][(int)floor(s)][1]+(variance_dmp[ii][(int)ceil(s)][1]-variance_dmp[ii][(int)floor(s)][1])*(s-floor(s));
             double var_z = variance_dmp[ii][(int)floor(s)][2]+(variance_dmp[ii][(int)ceil(s)][2]-variance_dmp[ii][(int)floor(s)][2])*(s-floor(s));
@@ -1007,16 +1083,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             // If the variance starts changing (up or down), signal a haptic cue to the user
             check_for_haptic_cue(var_x,var_y,var_z);
 
-            // Compute a potential DMP diminishing scale based on collisions
-            double collision_scaling = 1.0;
-
-            if(dmp_x_limiting){
-                double dist_to_collision = sqrt((x-dmp_x_collision)*(x-dmp_x_collision)+(y-dmp_y_collision)*(y-dmp_y_collision)+(z-dmp_z_collision)*(z-dmp_z_collision));
-                collision_scaling = 1-exp(-75*dist_to_collision);
-
-            }
-            
-            
             constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
             double x_conv, y_conv, z_conv;
             
@@ -1027,15 +1093,24 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             // 2 - Velocity Frame
             int input_mapping_method=1;
             array<double,4> q_surface;
+            //cout << crossProduct(u_dir,v_dir)[0] << " " << crossProduct(u_dir,v_dir)[1] << " " << crossProduct(u_dir,v_dir)[2] << endl;
             rotationToQuaternion(u_dir,v_dir,crossProduct(u_dir,v_dir),q_surface);
-
-            //cout << "DEF: " << dmp_fx << " " <<  dmp_fy << " " << dmp_fz << endl;
 
             array<double,3> rotated_deformation = map_deformation_input(input_mapping_method,dmp_fx,dmp_fy,dmp_fz,dx,dy,dz,q_surface);
 
             /////////////////////////////////////////////////////////////////
             //      Deformation scaling                                    //
             /////////////////////////////////////////////////////////////////
+            
+            // Compute a potential DMP diminishing scale based on collisions
+            double collision_scaling = 1.0;
+
+            if(dmp_x_limiting){
+                double dist_to_collision = sqrt((x-dmp_x_collision)*(x-dmp_x_collision)+(y-dmp_y_collision)*(y-dmp_y_collision)+(z-dmp_z_collision)*(z-dmp_z_collision));
+                collision_scaling = 1-exp(-75*dist_to_collision);
+
+            }
+            
             array<double,3> final_deformation = deformationScaling(rotated_deformation,var_x,var_y,var_z,selection,x_imp,y_imp, collision_scaling);
 
             // Turn off deformations
@@ -1045,54 +1120,151 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             //      Calculate New DMP values                              //
             ////////////////////////////////////////////////////////////////
 
-            // Calculate New X (State 1)
-            ddx = k*(attractor_points[ii][0]-x_imp)-b*dx+dmp_x;
-            dx = dx + ddx*0.01*delta_s;
-            x_imp = x_imp+dx*0.01*delta_s;
+            // Interpolate each of the applied forces for the non-integer value s
+            // TODO: this isn't right and once fixed, will also fail for the final sample
+            double dmp_x, dmp_y, dmp_z;
+            if(delta_s>=0.0){ // going forwards
+                dmp_x = dmps[ii][(int)floor(s)][0]+(dmps[ii][(int)ceil(s)][0]-dmps[ii][(int)floor(s)][0])*(s-floor(s));
+                dmp_y = dmps[ii][(int)floor(s)][1]+(dmps[ii][(int)ceil(s)][1]-dmps[ii][(int)floor(s)][1])*(s-floor(s));
+                dmp_z = dmps[ii][(int)floor(s)][2]+(dmps[ii][(int)ceil(s)][2]-dmps[ii][(int)floor(s)][2])*(s-floor(s));
+            }
+
+            else{ //going backwards
+                double s_max = float(dmps[ii].size());
+                dmp_x = dmps_reverse[ii][(int)floor(s_max-s)][0]+(dmps_reverse[ii][(int)ceil(s_max-s)][0]-dmps_reverse[ii][(int)floor(s_max-s)][0])*(s_max-s-floor(s_max-s));
+                dmp_y = dmps_reverse[ii][(int)floor(s_max-s)][1]+(dmps_reverse[ii][(int)ceil(s_max-s)][1]-dmps_reverse[ii][(int)floor(s_max-s)][1])*(s_max-s-floor(s_max-s));
+                dmp_z = dmps_reverse[ii][(int)floor(s_max-s)][2]+(dmps_reverse[ii][(int)ceil(s_max-s)][2]-dmps_reverse[ii][(int)floor(s_max-s)][2])*(s_max-s-floor(s_max-s));
+            }
+
             
+
+            // Calculate New X (State 1)
+            if(delta_s>=0.0){ //forwards
+                ddx = k*(attractor_points[ii][0]-x_imp)-b*dx+dmp_x;
+                dx = dx + ddx*0.01*delta_s;
+                x_imp = x_imp+dx*0.01*delta_s;
+            }
+
+            else{ //backwards
+                ddx = k*(starting_points[ii][0]-x_imp)-b*dx+dmp_x;
+                dx = dx + ddx*0.01*abs(delta_s);
+                x_imp = x_imp+dx*0.01*abs(delta_s);
+            }
+            
+            // deformation
             ddx_imp = k*(-x_def)-b_def*dx_imp+final_deformation[0];
-            dx_imp = dx_imp + ddx_imp*0.01*delta_s;
-            x_def = x_def + dx_imp*0.01*delta_s;
+            dx_imp = dx_imp + ddx_imp*0.01*abs(delta_s);
+            x_def = x_def + dx_imp*0.01*abs(delta_s);
 
             x = x_imp+x_def; 
 
             // Calculate New Y (State 2)
-            ddy = k*(attractor_points[ii][1]-y_imp)-b*dy+dmp_y;
-            dy = dy + ddy*0.01*delta_s;
-            y_imp = y_imp+dy*0.01*delta_s;
+            if(delta_s>=0.0){ //forwards
+                ddy = k*(attractor_points[ii][1]-y_imp)-b*dy+dmp_y;
+                dy = dy + ddy*0.01*delta_s;
+                y_imp = y_imp+dy*0.01*delta_s;
+            }
+
+            else{
+                ddy = k*(starting_points[ii][1]-y_imp)-b*dy+dmp_y;
+                dy = dy + ddy*0.01*abs(delta_s);
+                y_imp = y_imp+dy*0.01*abs(delta_s);
+            }
             
+            //deformation
             ddy_imp = k*(-y_def)-b_def*dy_imp+final_deformation[1];
-            dy_imp = dy_imp + ddy_imp*0.01*delta_s;
-            y_def = y_def + dy_imp*0.01*delta_s;
+            dy_imp = dy_imp + ddy_imp*0.01*abs(delta_s);
+            y_def = y_def + dy_imp*0.01*abs(delta_s);
 
             y = y_imp+y_def; 
 
             // Calculate New Z (State 3)
-            ddz = k*(attractor_points[ii][2]-z_imp)-b*dz+dmp_z;
-            dz = dz + ddz*0.01*delta_s;
-            z_imp = z_imp+dz*0.01*delta_s;
+            if(delta_s>=0.0){ //forwards
+                ddz = k*(attractor_points[ii][2]-z_imp)-b*dz+dmp_z;
+                dz = dz + ddz*0.01*delta_s;
+                z_imp = z_imp+dz*0.01*delta_s;
+            }
+
+            else{
+                ddz = k*(starting_points[ii][2]-z_imp)-b*dz+dmp_z;
+                dz = dz + ddz*0.01*abs(delta_s);
+                z_imp = z_imp+dz*0.01*abs(delta_s);
+            }
             
+            //deformation
             ddz_imp = k*(-z_def)-b_def*dz_imp+final_deformation[2];
-            dz_imp = dz_imp + ddz_imp*0.01*delta_s;
-            z_def = z_def + dz_imp*0.01*delta_s;
+            dz_imp = dz_imp + ddz_imp*0.01*abs(delta_s);
+            z_def = z_def + dz_imp*0.01*abs(delta_s);
 
             z = z_imp+z_def; 
 
             ////////////////////////////////////////////////
             // Calculate the orientation - NO DEFORMATIONS /
             ////////////////////////////////////////////////
-            ddqx = k*(attractor_points[ii][3]-qx)-b*dqx;
-            dqx = dqx + ddqx*0.01*delta_s;
-            qx = qx+dqx*0.01*delta_s;
-            ddqy = k*(attractor_points[ii][4]-qy)-b*dqy;
-            dqy = dqy + ddqy*0.01*delta_s;
-            qy = qy+dqy*0.01*delta_s;
-            ddqz = k*(attractor_points[ii][5]-qz)-b*dqz;
-            dqz = dqz + ddqz*0.01*delta_s;
-            qz = qz+dqz*0.01*delta_s;
-            ddqw = k*(attractor_points[ii][6]-qw)-b*dqw;
-            dqw = dqw + ddqw*0.01*delta_s;
-            qw = qw+dqw*0.01*delta_s;
+            
+            if(delta_s>=0.0){ //forwards
+                ddqx = k*(attractor_points[ii][3]-qx)-b*dqx;
+                dqx = dqx + ddqx*0.01*delta_s;
+                qx = qx+dqx*0.01*delta_s;
+                ddqy = k*(attractor_points[ii][4]-qy)-b*dqy;
+                dqy = dqy + ddqy*0.01*delta_s;
+                qy = qy+dqy*0.01*delta_s;
+                ddqz = k*(attractor_points[ii][5]-qz)-b*dqz;
+                dqz = dqz + ddqz*0.01*delta_s;
+                qz = qz+dqz*0.01*delta_s;
+                ddqw = k*(attractor_points[ii][6]-qw)-b*dqw;
+                dqw = dqw + ddqw*0.01*delta_s;
+                qw = qw+dqw*0.01*delta_s;
+            }
+
+            else{ //backwards
+                ddqx = k*(starting_points[ii][3]-qx)-b*dqx;
+                dqx = dqx + ddqx*0.01*abs(delta_s);
+                qx = qx+dqx*0.01*abs(delta_s);
+                ddqy = k*(starting_points[ii][4]-qy)-b*dqy;
+                dqy = dqy + ddqy*0.01*abs(delta_s);
+                qy = qy+dqy*0.01*abs(delta_s);
+                ddqz = k*(starting_points[ii][5]-qz)-b*dqz;
+                dqz = dqz + ddqz*0.01*abs(delta_s);
+                qz = qz+dqz*0.01*abs(delta_s);
+                ddqw = k*(starting_points[ii][6]-qw)-b*dqw;
+                dqw = dqw + ddqw*0.01*abs(delta_s);
+                qw = qw+dqw*0.01*abs(delta_s);
+            }
+
+
+            // Sign correction issues for transitioning between forwards and backwards DMPs
+            
+
+            if(signCorrection){
+                // dot product but keeping in mind the flip above
+                double val = dx_old*dx+dy_old*dy;
+                cout << "DPVAL:" << val << endl;
+                //cout << "DP:" << val << endl; 
+                if (dx_old*dx+dy_old*dy<0.0){
+                    signCorrection=false;
+                  //  cout << "YO" << endl << "YO" << endl << "YO" << endl;
+                }
+            }
+
+            dx_old = dx;
+            dy_old = dy;
+
+            if((delta_s>=0.0 && !signCorrection) || (delta_s<0.0 && signCorrection)){
+                dir_x = dx/sqrt(dx*dx+dy*dy);
+                dir_y = dy/sqrt(dx*dx+dy*dy);
+                cout << "yo1" << endl;
+            }
+            else{
+                dir_x = -dx/sqrt(dx*dx+dy*dy);
+                dir_y = -dy/sqrt(dx*dx+dy*dy);
+                cout << "yo2" << endl;
+            }
+
+            //cout << "DIRS: " << dir_x_old << "->" << dir_x << " " << dir_y_old << "->" << dir_y << endl;
+            // cout << "DXDY: " << dx << " " << dy << endl;
+
+            
 
             //cout << "X: " << x << " Y:" << y << endl;
 
@@ -1117,15 +1289,16 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 array<double,3> x_hat;
                 curr_surface.calculateSurfacePoint(x,y,r,n_hat,x_hat,y_hat);
 
-                //cout << "R: " << r[0] << " " << r[1] << " " << r[2] << endl;
                 
                 // Using the velocity of x and y (u and v), calculate the time
                 // derivative of the surface (i.e., vector-valued function)
                 array<double,3> v_hat;
                 v_hat[0]=x_hat[0]*dx+y_hat[0]*dy; v_hat[1]=x_hat[1]*dx+y_hat[1]*dy; v_hat[2]=x_hat[2]*dx+y_hat[2]*dy; // old velocity
-                v_hat[0]=x_hat[0]*(dx+dx_imp)+y_hat[0]*(dy+dy_imp); v_hat[1]=x_hat[1]*(dx+dx_imp)+y_hat[1]*(dy+dy_imp); v_hat[2]=x_hat[2]*(dx+dx_imp)+y_hat[2]*(dy+dy_imp); // true velocity
+                //v_hat[0]=x_hat[0]*(dx+dx_imp)+y_hat[0]*(dy+dy_imp); v_hat[1]=x_hat[1]*(dx+dx_imp)+y_hat[1]*(dy+dy_imp); v_hat[2]=x_hat[2]*(dx+dx_imp)+y_hat[2]*(dy+dy_imp); // true velocity
                 //fix velocity -> transition_testing
-                // v_hat[0] = 1.0; v_hat[1] = 0.0; v_hat[2]=0.0;
+                
+                // MH SADJHISDHJFISDFJISDJFIFISJ - TEMP FOR THE POLISHING!!!!
+                //v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
 
                 double v_mag = sqrt(v_hat[0]*v_hat[0] + v_hat[1]*v_hat[1] + v_hat[2]*v_hat[2]);
 
@@ -1153,7 +1326,23 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
                 // Orientation is now just the identity in the constraint frame
                 // NOTE: This is overwriting the DMP for orientation above!
-                qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
+                if(delta_s>=0.0){
+                    if(!signCorrection){
+                        qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
+                    }
+                    else{
+                        qx = 0.0; qy = 0.0; qz = 1.0; qw = 0.0;
+                    }
+                }
+
+                else{
+                    if(!signCorrection){
+                        qx = 0.0; qy = 0.0; qz = 1.0; qw = 0.0;
+                    }
+                    else{
+                        qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
+                    }
+                }
 
                 // Convert the XYZ into the constraint frame
                 array<double,3> xyz_conv = vectorIntoConstraintFrame(r[0], r[1], r[2], constraint_frame.x, constraint_frame.y, constraint_frame.z, constraint_frame.w);
@@ -1168,10 +1357,14 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             // TODO: Maybe use a covariance to try and remove units?
             // TODO: this should be all kinematic directions at the least?
             // TODO: get to the point where the deformation is one-normalized so things are less arbitrarily scaled
-            double dir_x = dx/sqrt(dx*dx+dy*dy);
-            double dir_y = dy/sqrt(dx*dx+dy*dy);
+        
+
             // TODO: this aint right
             double dp_in_dir = dir_x*rotated_deformation[0] + dir_y*rotated_deformation[1];
+            cout << "DIRS" << dir_x << " " << dir_y << endl;
+            cout << "ROTD" << rotated_deformation[0] << " " << rotated_deformation[1] << endl;
+
+            double last_delta_s = delta_s;
             
             if(dp_in_dir > 0)
             {
@@ -1183,9 +1376,31 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
             delta_s = 1.0+1.3*dp_in_dir;
             cout << "DS:" << delta_s << endl;
+
+            //delta_s = 1.0;
+
+            // if (dhdKbHit()) {
+            
+            //     char keypress = dhdKbGet();
+            //     if (keypress == 'r'){
+            //         delta_s = -0.75;
+            //     }
+
+            //     if (keypress == 'f'){
+            //         delta_s = 1.0;
+            //     }
+            // }
+
+            if((last_delta_s<=0.0 && delta_s > 0.0) || (last_delta_s>=0.0 && delta_s < 0.0))
+            {
+                signCorrection=true;
+            }
+
+            //cout << "DS:" << delta_s << endl;
             s+=delta_s;
 
-            cout << "S: " << s << endl;
+            //cout << "S: " << s << endl;
+            //cout << "SC:" << signCorrection << endl;
 
             if (s<0.0){
                 s = 0.0; // don't allow negative time
