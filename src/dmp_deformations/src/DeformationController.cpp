@@ -109,7 +109,12 @@ DeformationController::DeformationController(string file){
     inputDevice_velocity = {0.0, 0.0, 0.0};
     prev_var_x = 0.0; prev_var_y = 0.0; prev_var_z = 0.0;
     var_x_changing = false; var_y_changing = false; var_z_changing = false;
-    trajectoryFile = file;
+    if(file==""){
+        trajectoryFile = "learneddmp.csv";
+    }
+    else{
+        trajectoryFile = file;
+    }
 }
 
 
@@ -685,7 +690,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
 
     // This loop monitors the robot which has started moving in the
     // force direction until it achieves the desired force (within a tolerance)
-    bool proper_contact = false;
+    bool proper_contact = true;
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
@@ -1069,9 +1074,10 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double s = 0; // phase variable used for time
         double delta_s = 1.0;
 
+        // These are used for the forwards/backwards DMP motion
         bool signCorrection = false;
-        double dir_x, dir_y;
-        double dx_old, dy_old;
+        double dir_x, dir_y, dir_z;
+        double dx_old, dy_old, dz_old;
 
         // Now replay the entirety of the demonstration
         while(s<dmps[ii].size()){
@@ -1135,8 +1141,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 dmp_y = dmps_reverse[ii][(int)floor(s_max-s)][1]+(dmps_reverse[ii][(int)ceil(s_max-s)][1]-dmps_reverse[ii][(int)floor(s_max-s)][1])*(s_max-s-floor(s_max-s));
                 dmp_z = dmps_reverse[ii][(int)floor(s_max-s)][2]+(dmps_reverse[ii][(int)ceil(s_max-s)][2]-dmps_reverse[ii][(int)floor(s_max-s)][2])*(s_max-s-floor(s_max-s));
             }
-
-            
 
             // Calculate New X (State 1)
             if(delta_s>=0.0){ //forwards
@@ -1234,39 +1238,37 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
 
             // Sign correction issues for transitioning between forwards and backwards DMPs
-            
-
+            // The sign correction is used between when the value of 's' changes value
+            // and when the velocity has actually flipped to the opposite
             if(signCorrection){
                 // dot product but keeping in mind the flip above
-                double val = dx_old*dx+dy_old*dy;
-                cout << "DPVAL:" << val << endl;
+                double val = dx_old*dx+dy_old*dy+float(selection.z)*dz_old*dz;
                 //cout << "DP:" << val << endl; 
-                if (dx_old*dx+dy_old*dy<0.0){
+                if (dx_old*dx+dy_old*dy+float(selection.z)*dz_old*dz<0.0){
                     signCorrection=false;
                   //  cout << "YO" << endl << "YO" << endl << "YO" << endl;
                 }
             }
 
+            // keep track of velocity for looking for signCorrection above
             dx_old = dx;
             dy_old = dy;
+            dz_old = dz;
 
+            // Want to keep the forward direction the same for the velocity heuristic
+            // in 2 cases (moving backwards and vel flipped and moving forwards, but sign hasn't been corrected)
+            // it needs to be switched in cardinality
             if((delta_s>=0.0 && !signCorrection) || (delta_s<0.0 && signCorrection)){
-                dir_x = dx/sqrt(dx*dx+dy*dy);
-                dir_y = dy/sqrt(dx*dx+dy*dy);
-                cout << "yo1" << endl;
+                dir_x = dx/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
+                dir_y = dy/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
+                dir_z = dy/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
             }
             else{
-                dir_x = -dx/sqrt(dx*dx+dy*dy);
-                dir_y = -dy/sqrt(dx*dx+dy*dy);
-                cout << "yo2" << endl;
+                dir_x = -dx/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
+                dir_y = -dy/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
+                dir_z = -dz/sqrt(dx*dx+dy*dy+float(selection.z)*dz*dz);
             }
 
-            //cout << "DIRS: " << dir_x_old << "->" << dir_x << " " << dir_y_old << "->" << dir_y << endl;
-            // cout << "DXDY: " << dx << " " << dy << endl;
-
-            
-
-            //cout << "X: " << x << " Y:" << y << endl;
 
             ////////////////////////////////////////////
             // Hybrid Control For Arbitrary Surfaces  //
@@ -1297,7 +1299,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 //v_hat[0]=x_hat[0]*(dx+dx_imp)+y_hat[0]*(dy+dy_imp); v_hat[1]=x_hat[1]*(dx+dx_imp)+y_hat[1]*(dy+dy_imp); v_hat[2]=x_hat[2]*(dx+dx_imp)+y_hat[2]*(dy+dy_imp); // true velocity
                 //fix velocity -> transition_testing
                 
-                // MH SADJHISDHJFISDFJISDJFIFISJ - TEMP FOR THE POLISHING!!!!
+                // MH  - TEMP FOR THE POLISHING!!!!
                 //v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
 
                 double v_mag = sqrt(v_hat[0]*v_hat[0] + v_hat[1]*v_hat[1] + v_hat[2]*v_hat[2]);
@@ -1326,6 +1328,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
                 // Orientation is now just the identity in the constraint frame
                 // NOTE: This is overwriting the DMP for orientation above!
+                // TODO: this isn't very general - only for a bidirectional tool
                 if(delta_s>=0.0){
                     if(!signCorrection){
                         qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
@@ -1352,33 +1355,25 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 
             }
 
-            // Compute the new velocity factor and
-            // Update the time variable
-            // TODO: Maybe use a covariance to try and remove units?
-            // TODO: this should be all kinematic directions at the least?
-            // TODO: get to the point where the deformation is one-normalized so things are less arbitrarily scaled
-        
 
-            // TODO: this aint right
-            double dp_in_dir = dir_x*rotated_deformation[0] + dir_y*rotated_deformation[1];
-            cout << "DIRS" << dir_x << " " << dir_y << endl;
-            cout << "ROTD" << rotated_deformation[0] << " " << rotated_deformation[1] << endl;
-
+            // Velocity Heuristic for evolution of the system
+            // Looks at how much the deformation is in the opposite direction of the kinematic directions
+            double dp_in_dir = dir_x*rotated_deformation[0] + dir_y*rotated_deformation[1]+float(selection.z)*dir_z*rotated_deformation[2];
             double last_delta_s = delta_s;
             
+            // only allow slowing down
             if(dp_in_dir > 0)
             {
-                dp_in_dir = 0.0; // only allow slowing down
+                dp_in_dir = 0.0; 
             }
 
-            // TODO: fix all this stuff
-            //dp_in_dir = 0.0;
-
+            // Allow up to 30 percent backwards
             delta_s = 1.0+1.3*dp_in_dir;
             cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
 
+            // // Set with keyboard instead of velocity direction 
             // if (dhdKbHit()) {
             
             //     char keypress = dhdKbGet();
@@ -1391,6 +1386,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             //     }
             // }
 
+
+            // Check for flip of delta s (+ to - or - to +)
             if((last_delta_s<=0.0 && delta_s > 0.0) || (last_delta_s>=0.0 && delta_s < 0.0))
             {
                 signCorrection=true;
@@ -1398,9 +1395,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
             //cout << "DS:" << delta_s << endl;
             s+=delta_s;
-
-            //cout << "S: " << s << endl;
-            //cout << "SC:" << signCorrection << endl;
 
             if (s<0.0){
                 s = 0.0; // don't allow negative time
@@ -1473,7 +1467,7 @@ void DeformationController::readPandaForces(geometry_msgs::Wrench wrench) {
 
 int DeformationController::run_deformation_controller(int argc, char **argv){
     ros::init(argc, argv, "DeformationController");
-    ros::NodeHandle n("~");  
+    ros::NodeHandle n("~");
 
     int deviceID = init_inputDevice();
     if (deviceID==-1) {

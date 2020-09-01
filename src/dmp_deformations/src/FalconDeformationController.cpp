@@ -46,6 +46,12 @@ FalconDeformationController::FalconDeformationController(string file){
     prev_var_x = 0.0; prev_var_y = 0.0; prev_var_z = 0.0;
     var_x_changing = false; var_y_changing = false; var_z_changing = false;
     trajectoryFile = file;
+    if(file==""){
+        trajectoryFile = "learneddmp.csv";
+    }
+    else{
+        trajectoryFile = file;
+    }
 }
 
 int FalconDeformationController::init_inputDevice() {
@@ -225,8 +231,12 @@ void FalconDeformationController::run_zero_displacement_controller(){
 }
 
 
-int main(int argc, char **argv) {    
-    FalconDeformationController controller;
-    int success = controller.run_deformation_controller(argc,argv);
+int main(int argc, char **argv) {
+    string filename = "";
+    if(argc>1){
+        filename=argv[1];
+    }
+    FalconDeformationController* controller = new FalconDeformationController(filename);
+    int success = controller->run_deformation_controller(argc,argv);
     return 0;
 }
