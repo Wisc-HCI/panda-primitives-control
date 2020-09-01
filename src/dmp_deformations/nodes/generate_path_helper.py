@@ -52,6 +52,7 @@ def printCircularSection(csvfile, starting_point, ending_point, num_pts, radius,
 
     pts = np.array(pts)
     plt.plot(pts[:,0],pts[:,1])
+    plt.axis("Equal")
     plt.show()
 
 def printPathSection(csvfile,starting_point,ending_point,num_pts):
@@ -308,7 +309,7 @@ def cowling4():
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
         printCircularSection(csvfile, np.array([0.2, 0.2, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                         np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.02,10)
+                         np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.02,50)
 
         surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.6)
         ending_vel = r_u * 0.0 + r_v * 1.0
@@ -325,7 +326,7 @@ def cowling4():
 
 
 def main():
-    layup2()
+    cowling4()
 
 
 
