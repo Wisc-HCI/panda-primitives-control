@@ -309,9 +309,9 @@ def cowling4():
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
         printCircularSection(csvfile, np.array([0.2, 0.2, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                         np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.02,50)
+                         np.array([0.2, 0.8, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.02,-50)
 
-        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.6)
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.8)
         ending_vel = r_u * 0.0 + r_v * 1.0
         ending_vel = ending_vel / np.linalg.norm(ending_vel)
         ending_y = np.cross(normal_end, ending_vel)
