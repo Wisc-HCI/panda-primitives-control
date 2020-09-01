@@ -19,8 +19,8 @@ class DMP:
     num_points = 200 # number of points in learned DMP
     dt = 0.01 # sample time of DMP
     num_variables = 3 # number of independent DMPs
-    gmm_states = 40
-    s_alpha = 2/(num_points*dt);  # decay factor for forcing term - 3 tau i.e., 95%
+    gmm_states = 50
+    s_alpha = 3/(num_points*dt);  # decay factor for forcing term - 3 tau i.e., 95%
     number_demos = 0
 
     k = 50
@@ -40,6 +40,14 @@ class DMP:
 
         # print "Initializing"
 
+
+
+    # Expects the following format for demonstration data
+    # it is a list where each entry is a separate demonstration.
+    # Each entry will be mxn where m is the length
+    # of the data and n is the number of variables
+    # for one variable, the shape must be e.g., (200,1)
+    # as opposed to (200,)
     def inputData(self,demonstration_data):
         # Clear data if non-empty
         self.kinematic_data=[]
@@ -51,14 +59,11 @@ class DMP:
         # get number of variables
         self.num_variables = np.shape(demonstration_data[0])[1] # number of columns
 
-        # attractor point is last value for each of the DMPs
-        # choose to take this value from demonstration 1
-        # TODO: move to be the median of the demonstration values
+        # attractor point is the median last value from the demonstrations
 
         self.starting_points = np.zeros((self.num_variables,))
         self.attractor_points = np.zeros((self.num_variables,))
 
-        first_demo = demonstration_data[0]
 
         for jj in range(0,self.num_variables):
             # just use the actual point for now
@@ -81,6 +86,7 @@ class DMP:
                 interpolated = interp1d(np.arange(len(pos_temp)), pos_temp, axis=0, kind='cubic', fill_value='extrapolate')
                 pos_interp = interpolated(np.linspace(0, len(pos_temp), self.num_points))
 
+                # Finit differencing to get the desired velocity and acceleration to compute the force
                 vel_interp = np.gradient(pos_interp)/self.dt
                 acc_interp = np.gradient(vel_interp)/self.dt
 
@@ -88,8 +94,8 @@ class DMP:
                 # Using the ODE and solving for f: F = x_ddot-k(x_final-x)+bx_dot
                 NLF_interp = acc_interp-self.k*np.array([self.attractor_points[ii]-p for p in pos_interp])+self.b*vel_interp
 
-
-                # Normalize by the decay term to learn a function which is decaying (i.e., stable in dynamics terms)
+                # The part of the forcing function to be learned is before it has been normalized
+                # by the exponential (i.e., canonical system - s)
                 Decay_Normalized_NLF = np.divide(NLF_interp,self.s)
                 NLF_temp[0,jj*self.num_points:(jj+1)*self.num_points]=Decay_Normalized_NLF
 
@@ -112,7 +118,7 @@ class DMP:
             self.tbGMM.initialize(states=self.gmm_states,decay_fxn=self.s)
 
             for ii in range(0,self.tbGMM.states):
-                self.tbGMM.sigma[ii]= 2e-3; # Heuristic value
+                self.tbGMM.sigma[ii]= 2e-5; # Heuristic value
 
             # Compute Gaussian Activation
             H = np.zeros((self.tbGMM.states,self.num_points))
