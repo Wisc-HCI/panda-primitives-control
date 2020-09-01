@@ -149,7 +149,7 @@ void rotationToQuaternion(array<double,3> x_hat, array<double,3> y_hat, array<do
 
     // Make sure it is normalized
     double mag = sqrt(q_out[0]*q_out[0]+q_out[1]*q_out[1]+q_out[2]*q_out[2]+q_out[3]*q_out[3]);
-    q_out[0] = q_out[0]/mag; q_out[1] = q_out[1]/mag; q_out[2] = q_out[2]/mag; q_out[3] = q_out[3]/mag;
+    q_out[0] = -q_out[0]/mag; q_out[1] = -q_out[1]/mag; q_out[2] = -q_out[2]/mag; q_out[3] = q_out[3]/mag;
 }
 
 static double obj_closest_surface(const std::vector<double> &x, std::vector<double> &grad, void *data)
@@ -245,7 +245,11 @@ void vfSurface(ros::NodeHandle n){
         closest_pub.publish(loc);
         
         rotationToQuaternion(r_v,crossProduct(n_hat, r_v), n_hat, q_normal);
-        cout << "NHAT:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
+        array<double,3> temp = crossProduct(n_hat, r_v);
+        cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
+        cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
+        cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
+        cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
         //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
         usleep(10000);
     }
@@ -413,9 +417,9 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     }
 
     // set the orientation based on the normal
-    panda_pos[3] = -q_normal[0];
-    panda_pos[4] = -q_normal[1];
-    panda_pos[5] = -q_normal[2];
+    panda_pos[3] = q_normal[0];
+    panda_pos[4] = q_normal[1];
+    panda_pos[5] = q_normal[2];
     panda_pos[6] = q_normal[3];
 
 
