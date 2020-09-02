@@ -656,6 +656,8 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     // Calculate the starting point for orientation based on the first velocity of the DMP
     array<double,3> vel_hat = getFirstSurfaceVelocity(attractor_points[ii],starting_points[ii],dmps[ii][0][0],dmps[ii][0][1],x_hat,y_hat);
 
+    // MH for static orientation
+    //vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
     cout << "VELHAT" << vel_hat[0] << vel_hat[1] << vel_hat[2] << endl;
 
     // Z (normal) x X (vel) = +Y
@@ -690,14 +692,16 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
 
     // This loop monitors the robot which has started moving in the
     // force direction until it achieves the desired force (within a tolerance)
-    bool proper_contact = true;
+    bool proper_contact = false;
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
         double f_z_rotated = x_hat[2]*fx+y_hat[2]*fy+n_hat[2]*fz;
         cout << "FZ: " << f_z_rotated << " " << starting_points[ii][2] << endl;
-        // MH: reaction force so flip sign
-        if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
+        // reaction force so flip sign
+        // MH use absolute value for easier computation
+        //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
+        if(abs(f_z_rotated)>0.95*abs(starting_points[ii][2]))
         {
             proper_contact = true;
         }
