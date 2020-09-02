@@ -7,7 +7,21 @@ class ForceDimensionDeformationController: public DeformationController{
         int init_inputDevice();
         array<double, 3> getInputDeviceVelocity();
         void run_zero_displacement_controller();
+        ForceDimensionDeformationController(string file);
 };
+
+ForceDimensionDeformationController::ForceDimensionDeformationController(string file){
+    // why won't this inherit properly
+    inputDevice_velocity = {0.0, 0.0, 0.0};
+    prev_var_x = 0.0; prev_var_y = 0.0; prev_var_z = 0.0;
+    var_x_changing = false; var_y_changing = false; var_z_changing = false;
+    if(file==""){
+        trajectoryFile = "learneddmp.csv";
+    }
+    else{
+        trajectoryFile = file;
+    }
+}
 
 int ForceDimensionDeformationController::init_inputDevice() {
     cout <<"Setting up Force Dimension\n";
@@ -120,7 +134,11 @@ void ForceDimensionDeformationController::run_zero_displacement_controller(){
 
 
 int main(int argc, char **argv) {    
-    ForceDimensionDeformationController controller;
-    int success = controller.run_deformation_controller(argc,argv);
+    string filename = "";
+    if(argc>1){
+        filename=argv[1];
+    }
+    ForceDimensionDeformationController* controller = new ForceDimensionDeformationController(filename);
+    int success = controller->run_deformation_controller(argc,argv);
     return 0;
 }
