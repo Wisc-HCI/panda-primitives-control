@@ -36,21 +36,20 @@ def loadPresegmentedCore(file):
     demonstration_data = []
 
     # Skip over lines for surfaces, segmentation samples, interaction, and variance
-    demonstration_data.append(np.loadtxt(directory+'/'+file, delimiter=",", skiprows=4))
+    demonstration_data.append(np.loadtxt(directory+'/'+file, delimiter=",", skiprows=5))
     segmentation = []
 
     # Zip doesn't work if there is 1 entry since it is not iterable
-    if(np.shape(np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1,skiprows=1))!=()):
-        for surface_model,point,interaction,const_variance in zip(np.genfromtxt(directory+'/'+file,delimiter=",",max_rows=1,dtype='str') ,np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1, skiprows=1),np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1, skiprows=2),np.genfromtxt(directory+'/'+file,delimiter=",",max_rows=1,skip_header=3,dtype='str')):
+    if(np.shape(np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1,skiprows=2))!=()):
+        for surface_model,preaction,point,interaction,const_variance in zip(np.genfromtxt(directory+'/'+file,delimiter=",",max_rows=1,dtype='str'),np.genfromtxt(directory+'/'+file, delimiter=",",max_rows=1, skip_header=1,dtype='str'),np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1, skiprows=2),np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1, skiprows=3),np.genfromtxt(directory+'/'+file,delimiter=",",max_rows=1,skip_header=4,dtype='str')):
             # right now only allows for position-level
-
             temp_var = np.array(const_variance.split(" "))
 
             if interaction==1:
                 # TODO: fix this!!!!
-                segmentation.append((point, temp_var, np.array([1, 1, 1, 1, 1, 1, 1]),surface_model))
+                segmentation.append((point, temp_var, np.array([1, 1, 1, 1, 1, 1, 1]),surface_model,preaction))
             else:
-                segmentation.append((point, temp_var, np.array([1, 1, 0, 1, 1, 1, 1]),surface_model))
+                segmentation.append((point, temp_var, np.array([1, 1, 0, 1, 1, 1, 1]),surface_model,preaction))
     else:
         surface_model = np.genfromtxt(directory+'/'+file,delimiter=",",max_rows=1,dtype='str')
         point = np.loadtxt(directory+'/'+file, delimiter=",",max_rows=1, skiprows=1)
@@ -125,6 +124,7 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
             sel_vec = segment[2]
             variances = segment[1]
             surface=segment[3]
+            preaction=segment[4]
 
             demonstration_per_dmp = []
             reverse_demonstration_per_dmp = []
@@ -259,7 +259,7 @@ def calculateDMP(demonstration_data, segmentation, alignment_curves):
 
             # First write mode to signal new DMP
             surface = segment[3]
-            csvfile.write('mode'+','+surface+','+'')
+            csvfile.write('mode'+','+surface+','+preaction)
             csvfile.write('\n')
             # Write selection vector
             # TODO: fix this with orientation

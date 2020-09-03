@@ -203,6 +203,8 @@ def layup2():
         csvfile.write(
             ",layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,,,layup2,,")
         csvfile.write('\n')
+        csvfile.write(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,") # preaction
+        csvfile.write('\n')
         csvfile.write(
             "0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900")
         csvfile.write('\n')
@@ -273,11 +275,13 @@ def cowling4():
     ##########################################################
     #   Layup 2 TASK #########################################
     ##########################################################
-    with open(path_devel + 'cowling1_execution.csv', 'w') as csvfile:
+    with open(path_devel + 'cowling4_execution.csv', 'w') as csvfile:
         surfaceModel = PyBSpline.BSplineSurface()
         surfaceModel.loadSurface("cowling4")
 
         csvfile.write(",cowling4,,")
+        csvfile.write('\n')
+        csvfile.write(",,,") #preaction
         csvfile.write('\n')
         csvfile.write("0,100,200")
         csvfile.write('\n')
@@ -325,10 +329,48 @@ def cowling4():
                               0.0, -5.0, 0.0, 0.0, 0.0]), num_pts)
 
 
+def fastenerInsertion():
+    # Number of points per section
+    num_pts = 100
+    rospack = rospkg.RosPack()
+    path_devel = rospack.get_path('dmp_deformations') + "/../../devel/lib/dmp_deformations/"
+    ##########################################################
+    #   Layup 2 TASK #########################################
+    ##########################################################
+    with open(path_devel + 'fastener1_execution.csv', 'w') as csvfile:
+
+        csvfile.write(",,")
+        csvfile.write('\n')
+        csvfile.write(",toggleGrip,") #preaction
+        csvfile.write('\n')
+        csvfile.write("0,100")
+        csvfile.write('\n')
+        csvfile.write("1,1")
+        csvfile.write('\n')
+        csvfile.write("2 2 2,2 2 2")
+        csvfile.write('\n')
+
+        homing_point = np.array([0.45, -0.3, 0.20])
+        homing_point_2 = np.array([0.45,0.1,0.2])
+        q_straight = np.array([0.0, 0.0, 0.0, 1.0])
+        force = -5.0
+
+        printPathSection(csvfile, np.array(
+            [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+             0.0]),
+                         np.array(
+                             [homing_point_2[0], homing_point_2[1], homing_point_2[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                              0.0, 0.0, 0.0]), num_pts)
+
+        printPathSection(csvfile, np.array(
+            [homing_point_2[0], homing_point_2[1], homing_point_2[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+             0.0]),
+                         np.array(
+                             [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                              0.0, 0.0, 0.0]), num_pts)
+
 def main():
     cowling4()
-
-
 
 if __name__ == "__main__":
     main()
