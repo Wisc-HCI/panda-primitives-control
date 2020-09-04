@@ -434,7 +434,7 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
 void feedbackFalcon(geometry_msgs::Wrench wrench) {
     double scale = 0.1; // force reflection
     double viscous = 50; // friction
-    double vf_stiffness = 30;
+    double vf_stiffness = 0;
     double viscous_replay = 30; // TODO: want to get to 2 sqrt(stiffness)
     double stiffness = 100; // for replay
     double delta_T = 0.001;
