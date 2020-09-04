@@ -54,6 +54,9 @@ void setEELink(const std_msgs::String& msg) {
     if (msg.data == "pandaRoller") {
         eeLink = PandaController::EELink::PandaRoller;
     }
+    if (msg.data == "pandaPolisher") {
+        eeLink = PandaController::EELink::PandaPolisher;
+    }
     if (msg.data == "pandaMocap") {
         eeLink = PandaController::EELink::PandaMocap;
     }
