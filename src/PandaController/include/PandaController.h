@@ -13,7 +13,7 @@
 
 namespace PandaController {
     enum KinematicChain {PandaFlange,PandaCamera};
-    enum EELink {PandaGripper,PandaRoller,PandaMocap,CameraLink};
+    enum EELink {PandaGripper,PandaRoller,PandaPolisher,PandaMocap,CameraLink};
     struct EulerAngles {
         double roll, pitch, yaw;
     };
@@ -33,7 +33,7 @@ namespace PandaController {
     EulerAngles quaternionToEuler(Eigen::Quaterniond q);
     Eigen::Quaterniond eulerToQuaternion(EulerAngles angle);
     
-    std::array<double, 6> readFTForces();
+    std::array<double, 6> readFTForces(Eigen::Quaterniond orientation);
     void writeFTForces(std::array<double, 6> data);
 
     std::array<double, 7> readPoseGoal();

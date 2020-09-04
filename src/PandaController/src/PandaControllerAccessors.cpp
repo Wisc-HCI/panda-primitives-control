@@ -80,12 +80,12 @@ namespace PandaController {
 
         // center hole to mating surface is 0.090988m
         // force torque sensor is 0.06534 m
-        // offset in non-vertical is 63mm polisher + 15 mm interface = 78mm (-y of previous transform)
+        // offset in non-vertical is 63mm polisher + 15 mm interface = 78mm (-x of previous transform)
         Eigen::Matrix4d pandaPolisherEELink = (
             Eigen::Matrix4d() << 
-                 0.0,  -1.0,    0.0,       0, 
-                 0.0,   0.0,   -1.0,       -0.078, 
-                 1.0,   0.0,    0.0, 0.1563, 
+                  0.0,   0.0,   1.0,    -0.078, 
+                 -1.0,   0.0,   0.0,       0.0, 
+                  0.0,  -1.0,   0.0,    0.1563, 
                     0,     0,     0,       1
         ).finished();
 

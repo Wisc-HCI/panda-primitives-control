@@ -199,7 +199,7 @@ namespace PandaController {
         // Current robot state
         auto position = getEEPos();
         auto orientation = getEEOrientation();
-        array<double, 6> currentWrench = readFTForces();
+        array<double, 6> currentWrench = readFTForces(orientation);
 
         // Rotate current command (positions and forces [todo: generalwrenches]) into the constraint frame to compute control law
         // note: force is first brought back to the global frame via the orientation

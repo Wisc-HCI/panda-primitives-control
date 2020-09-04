@@ -43,9 +43,36 @@ namespace PandaController {
         int socketHandle;			/* Handle to UDP socket used to communicate with Net F/T. */
     }
 
-    array<double, 6> readFTForces() {
+    array<double, 6> readFTForces(Eigen::Quaterniond orientation) {
         boost::lock_guard<boost::mutex> guard(mutex);
-        return ft_sensor;
+
+        // look at orientation and subtract bias from correct axes
+        // i.e., bias is in the global frame (e.g., weight)
+        // thus, it needs to be rotated into the orientation
+
+        Eigen::Vector3d bias_F_global;
+        bias_F_global << ft_bias[0], ft_bias[1], ft_bias[2];
+        Eigen::Vector3d bias_T_global;
+        bias_T_global << ft_bias[3], ft_bias[4], ft_bias[5];
+
+        // Rotate
+        Eigen::Vector3d bias_F_local = orientation * bias_F_global;
+        Eigen::Vector3d bias_T_local = orientation * bias_T_global;
+
+        Eigen::Quaterniond rotyo = Eigen::Quaterniond(1.0,0.0,0.0,0.0);
+
+        Eigen::Vector3d forcesnofix;
+        forcesnofix << ft_sensor[0],ft_sensor[1],ft_sensor[2];
+        Eigen::Vector3d forcesfix = rotyo*forcesnofix;
+
+        array<double,6> biased_FT;
+        biased_FT[0] = forcesfix[0]-bias_F_local[0];
+        biased_FT[1] = forcesfix[1]-bias_F_local[1];
+        biased_FT[2] = forcesfix[2]-bias_F_local[2];
+        biased_FT[3] = ft_sensor[3]-bias_T_local[0];
+        biased_FT[4] = ft_sensor[4]-bias_T_local[1];
+        biased_FT[5] = ft_sensor[5]-bias_T_local[2];
+        return biased_FT;
     }
     void writeFTForces(array<double, 6> data){
         boost::lock_guard<boost::mutex> guard(mutex);
@@ -145,12 +172,12 @@ namespace PandaController {
 
         array<double, 3> force_sensor = {0.0, 0.0, 0.0};
         array<double, 3> torque_sensor = {0.0, 0.0, 0.0};
-        force_sensor[0]=resp.FTData[0]/cpf-ft_bias[0];
-        force_sensor[1]=resp.FTData[1]/cpf-ft_bias[1];
-        force_sensor[2]=resp.FTData[2]/cpf-ft_bias[2];
-        torque_sensor[0]=resp.FTData[3]/cpf-ft_bias[3];
-        torque_sensor[1]=resp.FTData[4]/cpf-ft_bias[4];
-        torque_sensor[2]=resp.FTData[5]/cpf-ft_bias[5];
+        force_sensor[0]=resp.FTData[0]/cpf;
+        force_sensor[1]=resp.FTData[1]/cpf;
+        force_sensor[2]=resp.FTData[2]/cpf;
+        torque_sensor[0]=resp.FTData[3]/cpf;
+        torque_sensor[1]=resp.FTData[4]/cpf;
+        torque_sensor[2]=resp.FTData[5]/cpf;
 
         Eigen::VectorXd f = Eigen::Map<Eigen::VectorXd>(force_sensor.data(),3);
         Eigen::VectorXd t = Eigen::Map<Eigen::VectorXd>(torque_sensor.data(),3);

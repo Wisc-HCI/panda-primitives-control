@@ -365,7 +365,9 @@ void publishTf(franka::RobotState robot_state){
 void publishWrench(franka::RobotState robot_state){
     std::array<double, 6> forces;
     //forces = robot_state.O_F_ext_hat_K;
-    forces = PandaController::readFTForces();
+    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
+    
+    forces = PandaController::readFTForces(orientation);
     
     // convert back into the global frame
     Eigen::Vector3d forces_local;
@@ -373,7 +375,7 @@ void publishWrench(franka::RobotState robot_state){
     Eigen::Vector3d torques_local;
     torques_local << forces[3], forces[4], forces[5];
 
-    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
+    
 
     Eigen::Vector3d forces_global = orientation * forces_local;
     Eigen::Vector3d torques_global = orientation * torques_local;
@@ -392,7 +394,8 @@ void publishWrench(franka::RobotState robot_state){
 void publishWrenchLocal(franka::RobotState robot_state){
     std::array<double, 6> forces;
     //forces = robot_state.O_F_ext_hat_K;
-    forces = PandaController::readFTForces();
+    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
+    forces = PandaController::readFTForces(orientation);
 
     geometry_msgs::Wrench wrench;
     wrench.force.x = forces[0];
