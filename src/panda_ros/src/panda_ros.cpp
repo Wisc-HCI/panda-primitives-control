@@ -367,36 +367,8 @@ void publishWrench(franka::RobotState robot_state){
     //forces = robot_state.O_F_ext_hat_K;
     Eigen::Quaterniond orientation = PandaController::getEEOrientation();
     
-    forces = PandaController::readFTForces(orientation);
+    forces = PandaController::readFTForces();
     
-    // convert back into the global frame
-    Eigen::Vector3d forces_local;
-    forces_local << forces[0], forces[1], forces[2];
-    Eigen::Vector3d torques_local;
-    torques_local << forces[3], forces[4], forces[5];
-
-    
-
-    Eigen::Vector3d forces_global = orientation * forces_local;
-    Eigen::Vector3d torques_global = orientation * torques_local;
-
-    geometry_msgs::Wrench wrench;
-    wrench.force.x = forces_global[0];
-    wrench.force.y = forces_global[1];
-    wrench.force.z = forces_global[2];
-    wrench.torque.x = torques_global[0];
-    wrench.torque.y = torques_global[1];
-    wrench.torque.z = torques_global[2];
-
-    g_wrenchPub.publish(wrench);
-}
-
-void publishWrenchLocal(franka::RobotState robot_state){
-    std::array<double, 6> forces;
-    //forces = robot_state.O_F_ext_hat_K;
-    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
-    forces = PandaController::readFTForces(orientation);
-
     geometry_msgs::Wrench wrench;
     wrench.force.x = forces[0];
     wrench.force.y = forces[1];
@@ -406,12 +378,38 @@ void publishWrenchLocal(franka::RobotState robot_state){
     wrench.torque.z = forces[5];
 
     g_wrenchPub.publish(wrench);
-    wrench.force.x = -forces[0];
-    wrench.force.y = -forces[1];
-    wrench.force.z = -forces[2];
-    wrench.torque.x = -forces[3];
-    wrench.torque.y = -forces[4];
-    wrench.torque.z = -forces[5];
+}
+
+void publishWrenchLocal(franka::RobotState robot_state){
+    std::array<double, 6> forces;
+    //forces = robot_state.O_F_ext_hat_K;
+    Eigen::Quaterniond orientation = PandaController::getEEOrientation();
+    forces = PandaController::readFTForces();
+
+     // convert back into the global frame
+    Eigen::Vector3d forces_global;
+    forces_global << forces[0], forces[1], forces[2];
+    Eigen::Vector3d torques_global;
+    torques_global << forces[3], forces[4], forces[5];
+
+    Eigen::Vector3d forces_local = orientation.inverse() * forces_global;
+    Eigen::Vector3d torques_local = orientation.inverse() * torques_global;
+
+    geometry_msgs::Wrench wrench;
+    wrench.force.x = forces_local[0];
+    wrench.force.y = forces_local[1];
+    wrench.force.z = forces_local[2];
+    wrench.torque.x = torques_local[0];
+    wrench.torque.y = torques_local[1];
+    wrench.torque.z = torques_local[2];
+
+    g_wrenchPub.publish(wrench);
+    wrench.force.x = -forces_local[0];
+    wrench.force.y = -forces_local[1];
+    wrench.force.z = -forces_local[2];
+    wrench.torque.x = -torques_local[0];
+    wrench.torque.y = -torques_local[1];
+    wrench.torque.z = -torques_local[2];
 
     g_controlWrenchPub.publish(wrench);
 }
