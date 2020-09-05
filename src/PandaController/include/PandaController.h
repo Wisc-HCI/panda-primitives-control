@@ -27,13 +27,14 @@ namespace PandaController {
     Eigen::Quaterniond getEEOrientation();
     Eigen::VectorXd getEEPos(PandaController::KinematicChain chain, PandaController::EELink link);
     Eigen::Quaterniond getEEOrientation(PandaController::KinematicChain chain, PandaController::EELink link);
+    Eigen::Quaterniond getFTOrientation();
 
     void setTrajectory(Trajectory);
     void writeCommandedPosition(Eigen::VectorXd data);
     EulerAngles quaternionToEuler(Eigen::Quaterniond q);
     Eigen::Quaterniond eulerToQuaternion(EulerAngles angle);
     
-    std::array<double, 6> readFTForces(Eigen::Quaterniond orientation);
+    std::array<double, 6> readFTForces();
     void writeFTForces(std::array<double, 6> data);
 
     std::array<double, 7> readPoseGoal();

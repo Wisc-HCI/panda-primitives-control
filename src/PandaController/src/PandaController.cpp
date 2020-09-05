@@ -199,14 +199,14 @@ namespace PandaController {
         // Current robot state
         auto position = getEEPos();
         auto orientation = getEEOrientation();
-        array<double, 6> currentWrench = readFTForces(orientation);
+        array<double, 6> currentWrench = readFTForces();
 
         // Rotate current command (positions and forces [todo: generalwrenches]) into the constraint frame to compute control law
-        // note: force is first brought back to the global frame via the orientation
         Eigen::Vector3d currentPositionCF = constraint_frame.inverse() * position;
         Eigen::Vector3d currentForce;
         currentForce << currentWrench[0], currentWrench[1], currentWrench[2];
-        Eigen::Vector3d currentForceCF = constraint_frame.inverse() * orientation * currentForce;
+        // current force is in the global frame
+        Eigen::Vector3d currentForceCF = constraint_frame.inverse() *  currentForce;
 
         // Compute Position/Force Hybrid Control Law
         double scaling_factor = 5;

@@ -89,6 +89,18 @@ namespace PandaController {
                     0,     0,     0,       1
         ).finished();
 
+        // force torque sensor
+        // sensor is aligned with gripper transform
+        // really only the orientation is important!!
+        // TODO: remove 30 degrees and put it here!!
+        Eigen::Matrix4d pandaFTLink = (
+            Eigen::Matrix4d() << 
+                  0.7071, -0.7071,  0,       0.0 
+                 -0.7071, -0.7071,  0,       0.0, 
+                  0,       0,      -1,   0.06534, 
+                  0,     0,     0,           1
+        ).finished();
+
         vector<DHA> ee_chain = PandaFlangeDHA;
         Eigen::Matrix4d ee_link = pandaGripperEELink;
        
@@ -277,6 +289,13 @@ namespace PandaController {
 
     Eigen::Quaterniond getEEOrientation() {
         Eigen::Affine3d transform(getEETransform());
+        return Eigen::Quaterniond(transform.linear()).normalized();
+    }
+
+    Eigen::Quaterniond getFTOrientation() {
+        // This computes the orientation for the given configuration of the force torque sensor
+        // using a static link and chain choice
+        Eigen::Affine3d transform(EEFromDHA(current_state.q, PandaFlangeDHA,pandaFTLink));
         return Eigen::Quaterniond(transform.linear()).normalized();
     }
     
