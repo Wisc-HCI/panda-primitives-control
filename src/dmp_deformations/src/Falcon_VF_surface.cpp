@@ -243,6 +243,11 @@ void vfSurface(ros::NodeHandle n){
         loc.z = r[2];
         cx= r[0]; cy = r[1]; cz=r[2];
         closest_pub.publish(loc);
+
+        //switch direction for joint limits
+        r_v[0] = -r_v[0];
+        r_v[1] = -r_v[1];
+        r_v[2] = -r_v[2];
         
         rotationToQuaternion(r_v,crossProduct(n_hat, r_v), n_hat, q_normal);
         array<double,3> temp = crossProduct(n_hat, r_v);

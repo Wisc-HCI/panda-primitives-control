@@ -691,12 +691,11 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
-        double f_z_rotated = x_hat[2]*fx+y_hat[2]*fy+n_hat[2]*fz;
-        cout << "FZ: " << f_z_rotated << " " << starting_points[ii][2] << endl;
+        cout << "FZ: " << fz << " " << starting_points[ii][2] << endl;
         // reaction force so flip sign
         // MH use absolute value for easier computation - should be overdamped
         //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
-        if(abs(f_z_rotated)>0.95*abs(starting_points[ii][2]))
+        if(abs(fz)>0.95*abs(starting_points[ii][2]))
         {
             proper_contact = true;
         }
@@ -1513,7 +1512,7 @@ int DeformationController::run_deformation_controller(int argc, char **argv){
 
     ros::Publisher command_pub = 
         n.advertise<std_msgs::String>("/panda/commands", 5);
-    ros::Subscriber force_sub = n.subscribe("/panda/wrench", 10, &DeformationController::readPandaForces, this);
+    ros::Subscriber force_sub = n.subscribe("/panda/control_wrench", 10, &DeformationController::readPandaForces, this);
     
     tf2_ros::TransformListener tfListener(tfBuffer); 
 
