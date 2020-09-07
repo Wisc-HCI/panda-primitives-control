@@ -695,7 +695,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
         // reaction force so flip sign
         // MH use absolute value for easier computation - should be overdamped
         //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
-        if(abs(fz)>0.95*abs(starting_points[ii][2]))
+        if(abs(fz)>0.80*abs(starting_points[ii][2]))
         {
             proper_contact = true;
         }
