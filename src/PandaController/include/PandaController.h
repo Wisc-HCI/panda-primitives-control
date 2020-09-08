@@ -29,6 +29,9 @@ namespace PandaController {
     Eigen::Quaterniond getEEOrientation(PandaController::KinematicChain chain, PandaController::EELink link);
     Eigen::Quaterniond getFTOrientation();
 
+    double getHybridGain();
+    void setHybridGain(double gain);
+
     void setTrajectory(Trajectory);
     void writeCommandedPosition(Eigen::VectorXd data);
     EulerAngles quaternionToEuler(Eigen::Quaterniond q);

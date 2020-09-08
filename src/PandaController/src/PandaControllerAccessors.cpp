@@ -23,6 +23,8 @@ namespace PandaController {
         
 	    double maxForce = 15;
 
+        double hybridGain = 0.002;
+
         vector<DHA> PandaFlangeDHA{
             DHA(       0,   0.333,       0,  0),
             DHA(       0,       0, -M_PI/2,  1),
@@ -145,6 +147,16 @@ namespace PandaController {
     void setKinematicChain(KinematicChain chain, EELink link) {
         ee_chain = getChain(chain);
         ee_link = getEELink(link);
+    }
+
+    // Set different hybrid gains for different tool stiffness
+    void setHybridGain(double gain){
+        boost::lock_guard<boost::mutex> guard(mutex);
+        hybridGain=gain;
+    }
+
+    double getHybridGain(){
+        return hybridGain;
     }
 
     void setTrajectory(Trajectory t) {

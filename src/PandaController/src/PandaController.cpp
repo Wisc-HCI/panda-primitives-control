@@ -210,7 +210,7 @@ namespace PandaController {
 
         // Compute Position/Force Hybrid Control Law
         double scaling_factor = 5;
-        double Kfp = 0.002;
+        double Kfp = PandaController::getHybridGain();
         double v_x_CF = selection_vector[0]*(commandedPosition[0] - currentPositionCF[0]) * scaling_factor + (1-selection_vector[0])*Kfp*(commandedForce[0]+currentForceCF[0]);
         double v_y_CF = selection_vector[1]*(commandedPosition[1] - currentPositionCF[1]) * scaling_factor + (1-selection_vector[1])*Kfp*(commandedForce[1]+currentForceCF[1]);
         double v_z_CF = selection_vector[2]*(commandedPosition[2] - currentPositionCF[2]) * scaling_factor + (1-selection_vector[2])*Kfp*(commandedForce[2]+currentForceCF[2]);

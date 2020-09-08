@@ -9,6 +9,7 @@
 #include "Trajectory.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Float64.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TwistStamped.h"
@@ -289,6 +290,12 @@ void setHybrid(const panda_ros_msgs::HybridPose::ConstPtr& msg){
     }
 }
 
+void setHybridGain(const std_msgs::Float64& msg){
+    if (PandaController::isRunning()){    
+        PandaController::setHybridGain(msg.data);
+    }
+}
+
 void callbackCommands(const std_msgs::String& msg){
     std::vector<std::string> command;
     boost::split(command, msg.data, [](char c){return c == ';';});
@@ -447,6 +454,8 @@ int main(int argc, char **argv) {
     ros::Subscriber sub_velocity = n.subscribe("/panda/cart_velocity", 10, setVelocity);
     ros::Subscriber sub_joint_pose = n.subscribe("/panda/joint_pose", 10, setJointPose);
     ros::Subscriber sub_hybrid = n.subscribe("/panda/hybrid_pose", 10, setHybrid);
+    ros::Subscriber sub_hybridgain = n.subscribe("/panda/hybrid_gain", 1, setHybridGain);
+
 
     g_wrenchPub = n.advertise<geometry_msgs::Wrench>("/panda/wrench", 10);
     g_controlWrenchPub = n.advertise<geometry_msgs::Wrench>("/panda/control_wrench", 10);
