@@ -688,24 +688,30 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     // This loop monitors the robot which has started moving in the
     // force direction until it achieves the desired force (within a tolerance)
     bool proper_contact = false;
+    bool previous_sample_force = false;
+    int num_good_samples = 0;
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
-        cout << "FZ: " << fz << " " << starting_points[ii][2] << endl;
+        cout << "FZ: " << fz << " " << starting_points[ii][2] << " # good: " << num_good_samples << endl;
         // reaction force so flip sign
         // MH use absolute value for easier computation - should be overdamped
         //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
-        if(abs(fz)>0.80*abs(starting_points[ii][2]))
+        if(abs(fz)>0.20*abs(starting_points[ii][2]))
         {
-            proper_contact = true;
+            num_good_samples++;
+        }
+        else{
+            num_good_samples = 0;
+        }
+
+        if(num_good_samples>200){
+            proper_contact=true;
         }
         
-        // This keeps the falcon in zero-displacement mode while this loop runs
-        for (int yy=0; yy<10; yy++)
-        {
-            usleep(1000);
-        }
+        // get new force readings and wait 1 ms
         ros::spinOnce();
+        usleep(1000);
     }
     cout << "Force Onloading Complete..." << endl;
 }
