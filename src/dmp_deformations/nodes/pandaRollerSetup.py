@@ -8,7 +8,7 @@ __author__ = "Mike Hagenow"
 
 import rospy
 import time
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from panda_ros_msgs.msg import HybridPose
 
 
@@ -16,6 +16,7 @@ def main():
     rospy.init_node('ee_link_setter', anonymous=True)
     ee_link_pub = rospy.Publisher('/panda/set_ee_link', String, queue_size=1)
     first_pose_pub = rospy.Publisher('/panda/hybrid_pose', HybridPose, queue_size=1)
+    hgain_pub = rospy.Publisher('/panda/hybrid_gain', Float64, queue_size=1)
 
     time.sleep(3)
 
@@ -23,6 +24,11 @@ def main():
     temp_str = String()
     temp_str.data = "pandaRoller"
     ee_link_pub.publish(temp_str)
+
+     # set hybrid gain
+    gain = Float64()
+    gain.data = 0.0015
+    hgain_pub.publish(gain)
     
     time.sleep(0.5)
 
