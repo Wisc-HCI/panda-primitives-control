@@ -1276,19 +1276,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 }
             }
 
-            // New bidrectional checking for on the surface
-            // premise: if the new command leads to a negative DP in forward dir, then rotate by 180?
-            double dp_orientation = dx_total_old*(dx+dx_imp)+dy_total_old*(dy+dy_imp);
-            if (dp_orientation<0.0){
-                //toggle orientation flip
-                if(flippedOrientation){
-                    flippedOrientation=false;
-                }
-                else{
-                    flippedOrientation = true;
-                }
-            }
-
             // keep track of velocity for looking for signCorrection above
             dx_old = dx;
             dy_old = dy;
@@ -1331,6 +1318,24 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 array<double,3> n_hat = {0.0, 0.0, 0.0};
                 array<double,3> y_hat;
                 array<double,3> x_hat;
+
+                // Make sure to not command a value off the surface
+                if(x<0.01){
+                    x = 0.01;
+                }
+
+                if(x>0.99){
+                    x = 0.99;
+                }
+
+                if(y<0.01){
+                    y = 0.01;
+                }
+
+                if(y>0.99){
+                    y = 0.99;
+                }
+
                 curr_surface.calculateSurfacePoint(x,y,r,n_hat,x_hat,y_hat);
 
                 
@@ -1420,23 +1425,23 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // Allow up to 30 percent backwards
-            delta_s = 1.0+1.6*dp_in_dir;
+            // delta_s = 1.0+1.6*dp_in_dir;
             cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
 
-            // // Set with keyboard instead of velocity direction 
-            // if (dhdKbHit()) {
+            // Set with keyboard instead of velocity direction 
+            if (dhdKbHit()) {
             
-            //     char keypress = dhdKbGet();
-            //     if (keypress == 'r'){
-            //         delta_s = -0.75;
-            //     }
+                char keypress = dhdKbGet();
+                if (keypress == 'r'){
+                    delta_s = -0.75;
+                }
 
-            //     if (keypress == 'f'){
-            //         delta_s = 1.0;
-            //     }
-            // }
+                if (keypress == 'f'){
+                    delta_s = 1.0;
+                }
+            }
 
 
             // Check for flip of delta s (+ to - or - to +)
