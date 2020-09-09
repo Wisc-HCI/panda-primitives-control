@@ -64,9 +64,9 @@ class DeformationController{
         void calculateDMPTransition(double ii, double &transition_x, double &transition_y, double &transition_z, double &transition_def_x, double &transition_def_y, double &transition_def_z, double x_imp, double y_imp, double z_imp, double x_def, double y_def, double z_def, vector<array<double,3>> selections,vector<array<double,7>> starting_points, vector<string> surfaces);
         void calculateNearestContact(int ii,vector<array<double,3>> selections,vector<array<double,7>> starting_points,vector<array<double,7>> attractor_points,bool &dmp_x_limiting,bool &dmp_y_limiting,bool &dmp_z_limiting,double &dmp_x_collision, double &dmp_y_collision, double &dmp_z_collision);
         array<double,3> deformationScaling(array<double,3> &rotated_deformation, double var_x, double var_y, double var_z, geometry_msgs::Vector3 selection, double x, double y, double collision_scaling);
-        array<double,3> getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v );
+        array<double,3> getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v,double &ddu, double& ddv);
         array<double,3> map_deformation_input(int method, double dmp_fx,double dmp_fy,double dmp_fz,double dx,double dy, double dz, array<double,4> q_out);
-        void forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, string surface_name, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub);
+        void forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, string surface_name, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub,double &ddu, double& ddv);
         void readDemo(vector<vector<array<double,7>>> &dmps,vector<vector<array<double,7>>> &dmps_reverse,vector<array<double,3>> &selections,vector<array<double,7>> &starting_points,vector<array<double,7>> &attractor_points, vector<string> &surfaces, vector<vector<array<double,3>>> &variance_dmp,vector<string> &preactions);
         void replay_demo(ros::NodeHandle n);
         void actualPose(geometry_msgs::Pose pose);
@@ -559,7 +559,7 @@ array<double,3> DeformationController::deformationScaling(array<double,3> &rotat
 * This function takes in all of the relevant parameters for a particular DMP and will figure out the
 * starting velocity. This is used for setting the tool orientation as it approaches the surface.
 */
-array<double,3> DeformationController::getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v ){
+array<double,3> DeformationController::getFirstSurfaceVelocity(array<double,7> attractor_point, array<double,7> starting_point,double dmp_u,double dmp_v, array<double,3> r_u, array<double,3> r_v, double &ddu, double& ddv){
     
     // TODO: can this be zero?
     double k=50;
@@ -568,10 +568,10 @@ array<double,3> DeformationController::getFirstSurfaceVelocity(array<double,7> a
     // These next 2 are equivalent to calculating the first velocity in the DMP ignoring the deformation and damping (since the velocity is initially 0)
 
     // Calculate vel-U direction
-    double ddu = k*(attractor_point[0]-starting_point[0])+dmp_u;
+    ddu = k*(attractor_point[0]-starting_point[0])+dmp_u;
 
     // Calculate vel-V direction
-    double ddv = k*(attractor_point[1]-starting_point[1])+dmp_v;
+    ddv = k*(attractor_point[1]-starting_point[1])+dmp_v;
 
     vel_hat[0] = r_u[0]*ddu+r_v[0]*ddv;
     vel_hat[1] = r_u[1]*ddu+r_v[1]*ddv;
@@ -639,7 +639,7 @@ array<double,3> DeformationController::map_deformation_input(int method, double 
 /**
 * TODO: fill this out
 */
-void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, string surface_name, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub){
+void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 selection, vector<array<double,7>> starting_points, vector<array<double,7>> attractor_points, vector<vector<array<double,7>>> dmps, BSplineSurface curr_surface, string surface_name, ros::Publisher &selection_vector_pub, ros::Publisher &constraint_frame_pub, ros::Publisher wrench_goal_pub, ros::Publisher hybrid_pub,double &ddu, double& ddv){
     // Do force onloading with the first sample
     cout << "Force Onloading Started..." << endl;
     geometry_msgs::Wrench ft;
@@ -658,7 +658,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     // Calculate the starting point for orientation based on the first velocity of the DMP
     array<double,3> r, n_hat, y_hat, x_hat;
     curr_surface.calculateSurfacePoint(starting_points[ii][0],starting_points[ii][1],r,n_hat,x_hat,y_hat);
-    array<double,3> vel_hat = getFirstSurfaceVelocity(attractor_points[ii],starting_points[ii],dmps[ii][0][0],dmps[ii][0][1],x_hat,y_hat);
+    array<double,3> vel_hat = getFirstSurfaceVelocity(attractor_points[ii],starting_points[ii],dmps[ii][0][0],dmps[ii][0][1],x_hat,y_hat,ddu,ddv);
 
     // MH for static orientation
     if (!surfaceBidirectional(surface_name)){
@@ -1013,9 +1013,14 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     double dmp_y_collision = 0.0;
     double dmp_z_collision = 0.0;
     double surface_scaling_x = 1.0; double surface_scaling_y = 1.0;
+    array<double,3> first_surf_vel = {0.0, 0.0, 0.0};
 
     array<double,3> u_dir = {1.0, 0.0, 0.0};
     array<double,3> v_dir = {0.0, 1.0, 0.0};
+
+    // first direction on surface in parameterized coordinates
+    double ddu;
+    double ddv;
 
     BSplineSurface curr_surface;
 
@@ -1061,7 +1066,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         if((selection.x==0 || selection.y==0 || selection.z==0)){
             if(previous_dmp_no_contact){
                 // If selection has force control and is transitioning from no-contact, need force onloading
-                forceOnloading(ii,selection,starting_points,attractor_points,dmps,curr_surface,surfaces[ii],selection_vector_pub,constraint_frame_pub,wrench_goal_pub,hybrid_pub);
+                forceOnloading(ii,selection,starting_points,attractor_points,dmps,curr_surface,surfaces[ii],selection_vector_pub,constraint_frame_pub,wrench_goal_pub,hybrid_pub,ddu,ddv);
             }
             previous_dmp_no_contact = false;
         }
@@ -1096,9 +1101,12 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
         // These are used for the forwards/backwards DMP motion
         bool signCorrection = false;
+        bool flippedOrientation = false;
         double dir_x, dir_y, dir_z;
         double dx_old, dy_old, dz_old;
-        double dx_total_old, dy_total_old, dz_total_old;
+        double dx_total_old = 0.0; double dy_total_old=0.0; double dz_total_old=0.0;
+
+        constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
 
         // Now replay the entirety of the demonstration
         while(s<dmps[ii].size()){
@@ -1109,8 +1117,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
             // If the variance starts changing (up or down), signal a haptic cue to the user
             check_for_haptic_cue(var_x,var_y,var_z);
-
-            constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
             double x_conv, y_conv, z_conv;
             
             ////////////////////////////////////////////////////////////////
@@ -1270,6 +1276,19 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 }
             }
 
+            // New bidrectional checking for on the surface
+            // premise: if the new command leads to a negative DP in forward dir, then rotate by 180?
+            double dp_orientation = dx_total_old*(dx+dx_imp)+dy_total_old*(dy+dy_imp);
+            if (dp_orientation<0.0){
+                //toggle orientation flip
+                if(flippedOrientation){
+                    flippedOrientation=false;
+                }
+                else{
+                    flippedOrientation = true;
+                }
+            }
+
             // keep track of velocity for looking for signCorrection above
             dx_old = dx;
             dy_old = dy;
@@ -1322,7 +1341,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 v_hat[0]=x_hat[0]*(dx+dx_imp)+y_hat[0]*(dy+dy_imp); v_hat[1]=x_hat[1]*(dx+dx_imp)+y_hat[1]*(dy+dy_imp); v_hat[2]=x_hat[2]*(dx+dx_imp)+y_hat[2]*(dy+dy_imp); // true velocity
                 //fix velocity -> transition_testing
                 
-                // MH  - TEMP FOR THE POLISHING!!!!
+                // MH  - Static orientation for the polishing!!!!!
                 if(!surfaceBidirectional(surfaces[ii])){
                     v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0;
                 }
@@ -1332,10 +1351,22 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 
                 // If the velocity direction is non-zero, re-align the constraint frame
                 // If it is zero, it will keep its previous value
-                if(v_mag>0.0)
+
+                // heuristic to prevent large orientaion movements at slow speeds
+                if(v_mag>0.0 && abs(v_mag*delta_s)>0.001)
                 {
                     // change the constraint frame
                     v_hat[0]=v_hat[0]/v_mag; v_hat[1]=v_hat[1]/v_mag; v_hat[2]=v_hat[2]/v_mag;
+
+                    if(surfaceBidirectional(surfaces[ii]))
+                    {
+                        double dp_uv = (dx+dx_imp)*ddu+(dy+dy_imp)*ddv;
+                        if(dp_uv<0.0){
+                            v_hat[0] = -v_hat[0]; v_hat[1] = -v_hat[1]; v_hat[2] = -v_hat[2]; 
+                        }
+                    }
+                    
+
                     //bidirectional_checker(v_hat,prev_v_hat); //check if it should be flipped
                     //cout << "vhat: " << v_hat[0] <<  " " << v_hat[1] << " " << v_hat[2] << endl;
                     //cout << "p_vhat: " << prev_v_hat[0] <<  " " << prev_v_hat[1] << " " << prev_v_hat[2] << endl;
@@ -1347,41 +1378,23 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 
                     array<double,4> q_out;
                     rotationToQuaternion(v_hat,y_new,n_hat,q_out);
-                    cout << "CF: " << q_out[0] << " " << q_out[1] << " " << q_out[2] << " " << q_out[3] << endl;
                     constraint_frame.x = q_out[0]; constraint_frame.y = q_out[1]; constraint_frame.z = q_out[2]; constraint_frame.w = q_out[3];
+                    cout << "CF:" << q_out[0] << " " << q_out[1] << " " << q_out[2] << " " << q_out[3] << endl;
                 }
 
                 // Orientation is now just the identity in the constraint frame
                 // NOTE: This is overwriting the DMP for orientation above!
                 // TODO: this isn't very general - only for a bidirectional tool
-                if(delta_s>=0.0){
-                   if(!signCorrection){
-                       qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
-                   }
-                   else{
-                       qx = 0.0; qy = 0.0; qz = 1.0; qw = 0.0;
-                   }
-                }
+                
+                qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
 
-                else{
-                   if(!signCorrection){
-                       qx = 0.0; qy = 0.0; qz = 1.0; qw = 0.0;
-                   }
-                   else{
-                       qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
-                   }
-                }
-
-                // New bidrectional checking
-                // premise: if the new command leads to a negative DP in forward dir, then rotate by 180?
-                // qx = 0.0; qy= 0.0; qz = 0.0; qw = 1.0;
-
-                // double val = (dx_total_old*dx+dx_imp)+dy_total_old*(dy+dy_imp);
-                // //cout << "DP:" << val << endl; 
-                // if (dx_old*dx+dy_old*dy+float(selection.z)*dz_old*dz<0.0){
-                //     signCorrection=false;
-                // //  cout << "YO" << endl << "YO" << endl << "YO" << endl;
+                // double dp_uv = (dx+dx_imp)*ddu+(dy+dy_imp)*ddv;
+                // if(dp_uv>=0.0){
+                //     qx = 0.0; qy = 0.0; qz = 0.0; qw = 1.0;
                 // }
+
+                // else{
+                //     qx = 0.0; qy = 0.0; qz = 1.0; qw = 0.0;
                 // }
 
 
@@ -1397,7 +1410,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             // Velocity Heuristic for evolution of the system
             // Looks at how much the deformation is in the opposite direction of the kinematic directions
             double dp_in_dir = dir_x*rotated_deformation[0] + dir_y*rotated_deformation[1]+float(selection.z)*dir_z*rotated_deformation[2];
-            cout << "DIR:" << dir_x << " " << dir_y << " " << dir_z << endl;
+            //cout << "DIR:" << dir_x << " " << dir_y << " " << dir_z << endl;
             double last_delta_s = delta_s;
             
             // only allow slowing down
@@ -1407,23 +1420,23 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // Allow up to 30 percent backwards
-            //delta_s = 1.0+1.3*dp_in_dir;
+            delta_s = 1.0+1.6*dp_in_dir;
             cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
 
             // // Set with keyboard instead of velocity direction 
-            if (dhdKbHit()) {
+            // if (dhdKbHit()) {
             
-                char keypress = dhdKbGet();
-                if (keypress == 'r'){
-                    delta_s = -0.75;
-                }
+            //     char keypress = dhdKbGet();
+            //     if (keypress == 'r'){
+            //         delta_s = -0.75;
+            //     }
 
-                if (keypress == 'f'){
-                    delta_s = 1.0;
-                }
-            }
+            //     if (keypress == 'f'){
+            //         delta_s = 1.0;
+            //     }
+            // }
 
 
             // Check for flip of delta s (+ to - or - to +)

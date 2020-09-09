@@ -341,7 +341,7 @@ def fastenerInsertion():
 
         csvfile.write(",,,,,,,")
         csvfile.write('\n')
-        csvfile.write(",,grasp,,,release,,") # preaction/conditional logic fxn
+        csvfile.write("release,,grasp,,,release,,") # preaction/conditional logic fxn
         csvfile.write('\n')
         csvfile.write("0,100,200,300,400,500,600")
         csvfile.write('\n')
@@ -370,11 +370,11 @@ def fastenerInsertion():
             [holder_location[0], holder_location[1], holder_location[2]+0.13, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
              0.0]),
                          np.array(
-                             [holder_location[0], holder_location[1], holder_location[2]+0.06, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                             [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
                               0.0, 0.0, 0.0]), num_pts)
 
         printPathSection(csvfile, np.array(
-            [holder_location[0], holder_location[1], holder_location[2]+0.06, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+            [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
              0.0]),
                          np.array(
                              [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
@@ -410,7 +410,7 @@ def fastenerInsertion():
 
 
 def main():
-    cowling4()
+    fastenerInsertion()
 
 if __name__ == "__main__":
     main()
