@@ -697,7 +697,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
         // reaction force so flip sign
         // MH use absolute value for easier computation - should be overdamped
         //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
-        if(abs(fz)>0.20*abs(starting_points[ii][2]))
+        if(abs(fz)>0.30*abs(starting_points[ii][2]))
         {
             num_good_samples++;
         }
@@ -1044,11 +1044,11 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         if(preactions[ii]!="")
         {
             // publish to the event channel
-            usleep(500000);
+            usleep(1000000);
             std_msgs::String actionstr;
             actionstr.data = preactions[ii];
             event_pub.publish(actionstr);
-            usleep(500000);
+            usleep(1000000);
 
             // todo: add conditional logic
         }
