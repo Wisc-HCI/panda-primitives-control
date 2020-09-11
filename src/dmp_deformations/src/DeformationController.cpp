@@ -300,6 +300,10 @@ bool DeformationController::surfaceBidirectional(string surface){
         return true;
     }
 
+    else if(surface=="fastener1"){
+        return false;
+    }
+
     else{
         return false;
     }
@@ -662,7 +666,13 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
 
     // MH for static orientation
     if (!surfaceBidirectional(surface_name)){
-        vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
+        if(surface_name=="cowling4"){
+            vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
+        }
+        else{
+            vel_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; vel_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; vel_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
+        }
+        
     }
 
     // Z (normal) x X (vel) = +Y
@@ -1348,7 +1358,12 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 
                 // MH  - Static orientation for the polishing!!!!!
                 if(!surfaceBidirectional(surfaces[ii])){
-                    v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0;
+                    if(surface_name=="cowling4"){
+                        vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
+                    }
+                    else{
+                        vel_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; vel_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; vel_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
+                    }
                 }
                 double v_mag = sqrt(v_hat[0]*v_hat[0] + v_hat[1]*v_hat[1] + v_hat[2]*v_hat[2]);
 
