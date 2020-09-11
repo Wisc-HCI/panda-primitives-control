@@ -1358,11 +1358,11 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 
                 // MH  - Static orientation for the polishing!!!!!
                 if(!surfaceBidirectional(surfaces[ii])){
-                    if(surface_name=="cowling4"){
-                        vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
+                    if(surfaces[ii]=="cowling4"){
+                        v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
                     }
                     else{
-                        vel_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; vel_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; vel_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
+                        v_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; v_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; v_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
                     }
                 }
                 double v_mag = sqrt(v_hat[0]*v_hat[0] + v_hat[1]*v_hat[1] + v_hat[2]*v_hat[2]);
@@ -1440,23 +1440,23 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // Allow up to 30 percent backwards
-            // delta_s = 1.0+1.6*dp_in_dir;
+            delta_s = 1.0+1.6*dp_in_dir;
             cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
 
-            // Set with keyboard instead of velocity direction 
-            if (dhdKbHit()) {
+            // // Set with keyboard instead of velocity direction 
+            // if (dhdKbHit()) {
             
-                char keypress = dhdKbGet();
-                if (keypress == 'r'){
-                    delta_s = -0.75;
-                }
+            //     char keypress = dhdKbGet();
+            //     if (keypress == 'r'){
+            //         delta_s = -0.75;
+            //     }
 
-                if (keypress == 'f'){
-                    delta_s = 1.0;
-                }
-            }
+            //     if (keypress == 'f'){
+            //         delta_s = 1.0;
+            //     }
+            // }
 
 
             // Check for flip of delta s (+ to - or - to +)
