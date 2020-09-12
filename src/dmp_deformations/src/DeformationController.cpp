@@ -1381,33 +1381,32 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
                     
                     // Filter the parameterized velocity!!
-                    double mag_new = sqrt((dx+dx_imp)*(dx+dx_imp)+(dy+dy_imp)*(dy+dy_imp));
-                    double curr_u = (dx+dx_imp)/mag_new; double curr_v = (dy+dy_imp)/mag_new;
-                    if(!(prev_uv[0]==-1 && prev_uv[1]==-1) && mag_new>0.0){
-                        double alpha_filter = 0.08;
-
-                        if(surfaceBidirectional(surfaces[ii]))
-                        {
+                    if(surfaceBidirectional(surfaces[ii]))
+                    {
+                        double mag_new = sqrt((dx+dx_imp)*(dx+dx_imp)+(dy+dy_imp)*(dy+dy_imp));
+                        double curr_u = (dx+dx_imp)/mag_new; double curr_v = (dy+dy_imp)/mag_new;
+                        if(!(prev_uv[0]==-1 && prev_uv[1]==-1) && mag_new>0.0){
+                            double alpha_filter = 0.08;
                             double dp_uv_fixed = (dx+dx_imp)*ddu+(dy+dy_imp)*ddv;
                             if(dp_uv_fixed<0.0){
                                 curr_u = -curr_u;
                                 curr_v = -curr_v;
                             }
-                        }
 
-                        double dp_uv = curr_u*prev_uv[0]+curr_v*prev_uv[1];
-                        double theta = acos(dp_uv);
-                        double angle_interp = alpha_filter*theta;
-                        double anglesine = 1.0;
-                        if(curr_v/mag_new*prev_uv[0]-curr_u/mag_new*prev_uv[1]<0.0){
-                            anglesine=-1.0;
+                            double dp_uv = curr_u*prev_uv[0]+curr_v*prev_uv[1];
+                            double theta = acos(dp_uv);
+                            double angle_interp = alpha_filter*theta;
+                            double anglesine = 1.0;
+                            if(curr_v/mag_new*prev_uv[0]-curr_u/mag_new*prev_uv[1]<0.0){
+                                anglesine=-1.0;
+                            }
+                            array<double,2> interp_uv = {cos(anglesine*angle_interp)*prev_uv[0]-sin(anglesine*angle_interp)*prev_uv[1], sin(anglesine*angle_interp)*prev_uv[0]+cos(anglesine*angle_interp)*prev_uv[1]};
+                            cout << "actvel:" << curr_u/mag_new << " " << curr_v/mag_new << endl;
+                            curr_u = interp_uv[0]; curr_v = interp_uv[1];
+                            v_hat[0]=x_hat[0]*interp_uv[0]+y_hat[0]*interp_uv[1]; v_hat[1]=x_hat[1]*interp_uv[0]+y_hat[1]*interp_uv[1]; v_hat[2]=x_hat[2]*interp_uv[0]+y_hat[2]*interp_uv[1];
                         }
-                        array<double,2> interp_uv = {cos(anglesine*angle_interp)*prev_uv[0]-sin(anglesine*angle_interp)*prev_uv[1], sin(anglesine*angle_interp)*prev_uv[0]+cos(anglesine*angle_interp)*prev_uv[1]};
-                        cout << "actvel:" << curr_u/mag_new << " " << curr_v/mag_new << endl;
-                        curr_u = interp_uv[0]; curr_v = interp_uv[1];
-                        v_hat[0]=x_hat[0]*interp_uv[0]+y_hat[0]*interp_uv[1]; v_hat[1]=x_hat[1]*interp_uv[0]+y_hat[1]*interp_uv[1]; v_hat[2]=x_hat[2]*interp_uv[0]+y_hat[2]*interp_uv[1];
+                        prev_uv = {curr_u,curr_v};
                     }
-                    prev_uv = {curr_u,curr_v};
 
 
                     // Z x X = Y
