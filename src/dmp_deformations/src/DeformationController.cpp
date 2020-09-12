@@ -7,6 +7,7 @@
 #include <ctime>
 #include <ratio>
 #include <chrono>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -1104,8 +1105,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double dqx = 0.0, dqy = 0.0, dqz = 0.0, dqw=0.0;
         double qx=starting_points[ii][3], qy=starting_points[ii][4], qz=starting_points[ii][5], qw=starting_points[ii][6];
         
-        array<double,3> prev_v_hat = {0.0, 0.0, 0.0};
-        
         double s = 0; // phase variable used for time
         double delta_s = 1.0;
 
@@ -1115,6 +1114,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double dir_x, dir_y, dir_z;
         double dx_old, dy_old, dz_old;
         double dx_total_old = 0.0; double dy_total_old=0.0; double dz_total_old=0.0;
+
+        array<double,2> prev_uv = {-1, -1};
 
         constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
 
@@ -1378,19 +1379,36 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     // change the constraint frame
                     v_hat[0]=v_hat[0]/v_mag; v_hat[1]=v_hat[1]/v_mag; v_hat[2]=v_hat[2]/v_mag;
 
-                    if(surfaceBidirectional(surfaces[ii]))
-                    {
-                        double dp_uv = (dx+dx_imp)*ddu+(dy+dy_imp)*ddv;
-                        if(dp_uv<0.0){
-                            v_hat[0] = -v_hat[0]; v_hat[1] = -v_hat[1]; v_hat[2] = -v_hat[2]; 
-                        }
-                    }
                     
+                    // Filter the parameterized velocity!!
+                    double mag_new = sqrt((dx+dx_imp)*(dx+dx_imp)+(dy+dy_imp)*(dy+dy_imp));
+                    double curr_u = (dx+dx_imp)/mag_new; double curr_v = (dy+dy_imp)/mag_new;
+                    if(!(prev_uv[0]==-1 && prev_uv[1]==-1) && mag_new>0.0){
+                        double alpha_filter = 0.08;
 
-                    //bidirectional_checker(v_hat,prev_v_hat); //check if it should be flipped
-                    //cout << "vhat: " << v_hat[0] <<  " " << v_hat[1] << " " << v_hat[2] << endl;
-                    //cout << "p_vhat: " << prev_v_hat[0] <<  " " << prev_v_hat[1] << " " << prev_v_hat[2] << endl;
-                    //prev_v_hat[0] = v_hat[0]; prev_v_hat[1] = v_hat[1]; prev_v_hat[2] = v_hat[2]; 
+                        if(surfaceBidirectional(surfaces[ii]))
+                        {
+                            double dp_uv_fixed = (dx+dx_imp)*ddu+(dy+dy_imp)*ddv;
+                            if(dp_uv_fixed<0.0){
+                                curr_u = -curr_u;
+                                curr_v = -curr_v;
+                            }
+                        }
+
+                        double dp_uv = curr_u*prev_uv[0]+curr_v*prev_uv[1];
+                        double theta = acos(dp_uv);
+                        double angle_interp = alpha_filter*theta;
+                        double anglesine = 1.0;
+                        if(curr_v/mag_new*prev_uv[0]-curr_u/mag_new*prev_uv[1]<0.0){
+                            anglesine=-1.0;
+                        }
+                        array<double,2> interp_uv = {cos(anglesine*angle_interp)*prev_uv[0]-sin(anglesine*angle_interp)*prev_uv[1], sin(anglesine*angle_interp)*prev_uv[0]+cos(anglesine*angle_interp)*prev_uv[1]};
+                        cout << "actvel:" << curr_u/mag_new << " " << curr_v/mag_new << endl;
+                        curr_u = interp_uv[0]; curr_v = interp_uv[1];
+                        v_hat[0]=x_hat[0]*interp_uv[0]+y_hat[0]*interp_uv[1]; v_hat[1]=x_hat[1]*interp_uv[0]+y_hat[1]*interp_uv[1]; v_hat[2]=x_hat[2]*interp_uv[0]+y_hat[2]*interp_uv[1];
+                    }
+                    prev_uv = {curr_u,curr_v};
+
 
                     // Z x X = Y
                     array<double,3> y_new;
