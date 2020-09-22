@@ -362,6 +362,57 @@ def createTable():
 
     test_curve.writeSurface('table')
 
+def createFastenerSurface():
+    num_ctrl_pts = 30
+    theta = np.linspace(279,251,num_ctrl_pts)
+    radius = np.linspace(0.52959,0.546,num_ctrl_pts) #original .54864, but goes into surface
+    thetav, radiusv = np.meshgrid(theta, radius)
+    xv = 0.0644364+radiusv*np.cos(np.deg2rad(thetav))
+    yv = 0.44098+radiusv*np.sin(np.deg2rad(thetav))
+    zv = 0.128228+0.0*thetav
+
+    control_pts = np.transpose([xv, yv, zv])
+
+    # Apply a rotation and a translation to all of the points
+    R = np.array([[0.99978826, 0.00928849, -0.01836173],
+                  [-0.00907831, 0.9998927, 0.01149706],
+                  [0.01846655, -0.01132793, 0.9997653]])
+
+    t = np.array([0.38238362, -0.29635461, 0.012553])
+
+    t_addtl = np.matmul(R, np.array([0.025 * 5, 0.025 * 13, 0.0]).reshape((3, 1))).reshape((3,))
+    t = t + t_addtl
+
+    for ii in range(0, num_ctrl_pts):
+        for jj in range(0, num_ctrl_pts):
+            vector = np.array([control_pts[ii,jj,0],control_pts[ii,jj,1],control_pts[ii,jj,2]])
+            control_pts[ii,jj,:] = (np.matmul(R, vector.reshape((3, 1))) + t.reshape((3, 1))).reshape(3, )
+
+    pt1_u = np.array([0.0644364+0.52959*np.cos(np.deg2rad(279)),0.44098+0.52959*np.sin(np.deg2rad(279)),0.128228])
+    pt2_u = np.array([0.0644364+0.52959*np.cos(np.deg2rad(251)),0.44098+0.52959*np.sin(np.deg2rad(251)),0.128228])
+    pt1_v = np.array([0.0644364+0.52959*np.cos(np.deg2rad(265)),0.44098+0.52959*np.sin(np.deg2rad(265)),0.128228])
+    pt2_v = np.array([0.0644364+0.54864*np.cos(np.deg2rad(265)),0.44098+0.54864*np.sin(np.deg2rad(265)),0.128228])
+    u_dir = (pt2_u-pt1_u)/np.linalg.norm(pt2_u-pt1_u)
+    v_dir = (pt2_v-pt1_v)/np.linalg.norm(pt2_v-pt1_v)
+
+    print("----------------")
+
+    for ii in range(0,num_ctrl_pts):
+        for jj in range(0,num_ctrl_pts):
+            print("point = {"+str(control_pts[ii,jj,0])+", "+str(control_pts[ii,jj,1])+", "+str(control_pts[ii,jj,2])+"}")
+            print("pt=sim.addDrawingObject(dr,0.001,0.0,-1,30000,color)")
+            print("point[1]=point[1]+panda_frame[1]")
+            print("point[2]=point[2]+panda_frame[2]")
+            print("point[3]=point[3]+panda_frame[3]")
+            print("sim.addDrawingObjectItem(pt,point)")
+
+
+    curve = BSplineSurface()
+    curve.initialize(k=3, control_pts=control_pts,u_dir = u_dir ,v_dir= v_dir)
+    curve.writeSurface('fastener1')
+
+
+
 def createBoeing():
     x = np.linspace(0.0, 0.2032, 30)
     y = np.linspace(0.0, 0.2032, 30)
@@ -455,7 +506,7 @@ def curvedLoad():
     print(test.calculate_surface_point(0.1,0.1))
 
 if __name__ == "__main__":
-    testing()
+    createFastenerSurface()
 
 
 

@@ -916,6 +916,10 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     ros::Publisher nominaltraj_vector_pub = 
         n.advertise<geometry_msgs::Vector3>("/panda/nominaltraj", 5);
 
+    // Publishers specifically for data logging
+    ros::Publisher deformation_publisher = 
+        n.advertise<geometry_msgs::Vector3>("/lcsc/deformation", 1);
+
     // Pause 0.5s to allow publishers to register
     for(int jj=0; jj<500; jj++)
     {
@@ -1115,12 +1119,61 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double dx_old, dy_old, dz_old;
         double dx_total_old = 0.0; double dy_total_old=0.0; double dz_total_old=0.0;
 
+        // For the conditional logic
+        // current position from TF2
+        ros::spinOnce();
+        try{
+            geometry_msgs::TransformStamped transformStamped;
+            transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+            actual_pos[0] = transformStamped.transform.translation.x;
+            actual_pos[1] = transformStamped.transform.translation.y;
+            actual_pos[2] = transformStamped.transform.translation.z;
+            actual_orientation[0] = transformStamped.transform.rotation.x;
+            actual_orientation[1] = transformStamped.transform.rotation.y;
+            actual_orientation[2] = transformStamped.transform.rotation.z;
+            actual_orientation[3] = transformStamped.transform.rotation.w;
+        }
+
+        catch(tf2::TransformException &ex){
+            cout << "Can't get TF2" << endl << ex.what() << endl;
+        }
+        double starting_z = actual_pos[2];
+
         array<double,2> prev_uv = {-1, -1};
 
         constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
 
         // Now replay the entirety of the demonstration
         while(s<dmps[ii].size()){
+
+            // Conditional Logic
+            if(preactions[ii]=="peginhole"){
+                // current position from TF2
+                ros::spinOnce();
+                try{
+                    geometry_msgs::TransformStamped transformStamped;
+                    transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                    actual_pos[0] = transformStamped.transform.translation.x;
+                    actual_pos[1] = transformStamped.transform.translation.y;
+                    actual_pos[2] = transformStamped.transform.translation.z;
+                    actual_orientation[0] = transformStamped.transform.rotation.x;
+                    actual_orientation[1] = transformStamped.transform.rotation.y;
+                    actual_orientation[2] = transformStamped.transform.rotation.z;
+                    actual_orientation[3] = transformStamped.transform.rotation.w;
+                }
+
+                catch(tf2::TransformException &ex){
+                    cout << "Can't get TF2" << endl << ex.what() << endl;
+                }
+                cout << "DIFF:" << abs(starting_z-actual_pos[2]) << endl;
+                if(abs(starting_z-actual_pos[2])>0.005){
+                    // call this new function thing!!
+                    cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
+                    break;
+                }
+            }
+
+
             ros::spinOnce();
             double var_x = variance_dmp[ii][(int)floor(s)][0]+(variance_dmp[ii][(int)ceil(s)][0]-variance_dmp[ii][(int)floor(s)][0])*(s-floor(s));
             double var_y = variance_dmp[ii][(int)floor(s)][1]+(variance_dmp[ii][(int)ceil(s)][1]-variance_dmp[ii][(int)floor(s)][1])*(s-floor(s));
@@ -1521,6 +1574,18 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             hybridPose.constraint_frame = constraint_frame;
             hybridPose.sel_vector = {(uint8_t)selection.x, (uint8_t)selection.y, (uint8_t)selection.z, 1, 1, 1};
             hybrid_pub.publish(hybridPose);
+
+            ///////////////
+            // Log data  //
+            ///////////////
+
+            // deformations
+            geometry_msgs::Vector3 def_temp;
+            def_temp.x=dmp_fx; def_temp.y=dmp_fy; def_temp.z = dmp_fz;
+            deformation_publisher.publish(def_temp);
+
+            // nominal state
+            // total state
             
             // Pause for 0.01 seconds, but calculate velocities at 0.001s
             for (int yy=0; yy<10; yy++)

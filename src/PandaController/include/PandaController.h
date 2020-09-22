@@ -29,6 +29,7 @@ namespace PandaController {
     Eigen::Quaterniond getEEOrientation(PandaController::KinematicChain chain, PandaController::EELink link);
     Eigen::Quaterniond getFTOrientation();
 
+    // Set different hybrid gains for different tool stiffness
     double getHybridGain();
     void setHybridGain(double gain);
 
