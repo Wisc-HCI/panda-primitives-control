@@ -512,7 +512,7 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     // save prev_orientation
     q_prev[0] = q_filt[0]; q_prev[1] = q_filt[1]; q_prev[2] = q_filt[2]; q_prev[3] = q_filt[3]; 
 
-    // For recording
+    // For NLopt thread
     x = panda_pos[0];
     y = panda_pos[1];
     z = panda_pos[2];

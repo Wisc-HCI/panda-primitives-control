@@ -30,6 +30,7 @@ double x, y, z, fx, fy, fz;
 double cx, cy, cz;
 
 array<double,4> q_normal = {0.0, 0.0, 0.0, 1.0};
+array<double,4> q_prev = {0.0, 0.0, 0.0, 1.0};
 
 // For the NL optimization
 typedef struct {
@@ -40,6 +41,65 @@ typedef struct {
 array<double, 3> actual_pos;
 
 std::ofstream outputfile;
+
+
+/**
+* Orientation interpolation
+* based on https://en.wikipedia.org/wiki/Slerp
+* interpolation, x, is 0 to 1 bounded
+*/
+array<double,4> slerp(array<double,4> q_start, array<double,4> q_end,double x){
+    array<double,4> q_interp;
+    
+    // Make sure quaterions are properly normalized
+    double mag_q_start = sqrt(q_start[0]*q_start[0]+q_start[1]*q_start[1]+q_start[2]*q_start[2]+q_start[3]*q_start[3]);
+    q_start[0] = q_start[0]/mag_q_start; q_start[1] = q_start[1]/mag_q_start;
+    q_start[2] = q_start[2]/mag_q_start; q_start[3] = q_start[3]/mag_q_start;
+
+    double mag_q_end = sqrt(q_end[0]*q_end[0]+q_end[1]*q_end[1]+q_end[2]*q_end[2]+q_end[3]*q_end[3]);
+    q_end[0] = q_end[0]/mag_q_end; q_end[1] = q_end[1]/mag_q_end;
+    q_end[2] = q_end[2]/mag_q_end; q_end[3] = q_end[3]/mag_q_end;
+    
+    // Compute the cosine of the angle between the two vectors.
+    // dot product for quaternions is normal vector inner product
+    double dot = q_start[0]*q_end[0]+q_start[1]*q_end[1]+q_start[2]*q_end[2]+q_start[3]*q_end[3];
+
+    // make sure the shorter path is chosen
+    if (dot < 0.0f) {
+        q_end[0] = -q_end[0]; q_end[1] = -q_end[1]; q_end[2] = -q_end[2]; q_end[3] = -q_end[3];
+        dot = -dot;
+    }
+
+    const double DOT_THRESHOLD = 0.9995;
+    if (dot > DOT_THRESHOLD) {
+        // for close vectors, linear interpolation
+        q_interp[0] = q_start[0]+x*(q_end[0]-q_start[0]);
+        q_interp[1] = q_start[1]+x*(q_end[1]-q_start[1]);
+        q_interp[2] = q_start[2]+x*(q_end[2]-q_start[2]);
+        q_interp[3] = q_start[3]+x*(q_end[3]-q_start[3]);
+        
+        double mag_q_interp = sqrt(q_interp[0]*q_interp[0]+q_interp[1]*q_interp[1]+q_interp[2]*q_interp[2]+q_interp[3]*q_interp[3]);
+        q_interp[0] = q_interp[0]/mag_q_interp; q_interp[1] = q_interp[1]/mag_q_interp;
+        q_interp[2] = q_interp[2]/mag_q_interp; q_interp[3] = q_interp[3]/mag_q_interp;
+        return q_interp;
+    }
+
+    double theta_0 = acos(dot);
+    double theta = theta_0*x;
+    double sin_theta = sin(theta);
+    double sin_theta_0 = sin(theta_0);
+
+    double s0 = cos(theta) - dot * sin_theta / sin_theta_0;
+    double s1 = sin_theta / sin_theta_0;
+
+    q_interp[0] = s0*q_start[0]+s1*q_end[0];
+    q_interp[1] = s0*q_start[1]+s1*q_end[1];
+    q_interp[2] = s0*q_start[2]+s1*q_end[2];
+    q_interp[3] = s0*q_start[3]+s1*q_end[3];
+
+    return q_interp;
+}
+
 
 void signalHandler(int sig)
 {
@@ -115,7 +175,7 @@ array<double,3> crossProduct(array<double,3> x, array<double,3> y){
     return return_vec;
 }
 
-void vfSurface(ros::NodeHandle n){
+void vfSurface(ros::NodeHandle n, string filename){
     std::string rospath = ros::package::getPath("dmp_deformations");
     BSplineSurface surface;
     surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+"layup2"+".csv");
@@ -183,11 +243,27 @@ void vfSurface(ros::NodeHandle n){
         cx= r[0]; cy = r[1]; cz=r[2];
         closest_pub.publish(loc);
         
-        rotationToQuaternion(r_v,crossProduct(n_hat, r_v), n_hat, q_normal);
-        array<double,3> temp = crossProduct(n_hat, r_v);
-        cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
-        cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
-        cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
+        array<double,3> static_dir;
+
+        if(filename=="layup2"){
+            //switch direction for joint limits
+            // currently rotates counterclockwise!
+            static_dir[0] = -r_v[0];
+            static_dir[1] = -r_v[1];
+            static_dir[2] = -r_v[2];
+        }
+
+        else if(filename=="cowling4"){
+            static_dir[0] = r_v[0];
+            static_dir[1] = r_v[1];
+            static_dir[2] = r_v[2];
+        }
+
+        
+        rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
+        // cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
+        // cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
+        // cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
         cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
         //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
         usleep(10000);
@@ -300,11 +376,17 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
         panda_pos[6] = 1;
     }
 
-    // set the orientation based on the normal
-    panda_pos[3] = q_normal[0];
-    panda_pos[4] = q_normal[1];
-    panda_pos[5] = q_normal[2];
-    panda_pos[6] = q_normal[3];
+   // set the orientation based on the normal
+    array<double,4> q_filt;
+    q_filt = slerp(q_prev, q_normal,0.01);
+    panda_pos[3] = q_filt[0];
+    panda_pos[4] = q_filt[1];
+    panda_pos[5] = q_filt[2];
+    panda_pos[6] = q_filt[3];
+
+    // save prev_orientation
+    q_prev[0] = q_filt[0]; q_prev[1] = q_filt[1]; q_prev[2] = q_filt[2]; q_prev[3] = q_filt[3]; 
+
 
     // For NLopt thread
     x = panda_pos[0];
@@ -337,6 +419,12 @@ int main(int argc, char **argv) {
 
     // All of the required ros topics
     ros::init(argc, argv, "ForceDimensionDMP");
+
+    string filename="";
+    if(argc>1){
+        filename=argv[1];
+    }
+
     ros::NodeHandle n("~");  
     ros::Publisher gripper_pub = 
         n.advertise<std_msgs::String>("/panda/commands", 5);
@@ -370,6 +458,14 @@ int main(int argc, char **argv) {
          offsets[0] = transformStamped.transform.translation.x;
          offsets[1] = transformStamped.transform.translation.y;
          offsets[2] = transformStamped.transform.translation.z;
+         q_prev[0] = transformStamped.transform.rotation.x;
+         q_prev[1] = transformStamped.transform.rotation.y;
+         q_prev[2] = transformStamped.transform.rotation.z;
+         q_prev[3] = transformStamped.transform.rotation.w;
+         q_normal[0] = transformStamped.transform.rotation.x;
+         q_normal[1] = transformStamped.transform.rotation.y;
+         q_normal[2] = transformStamped.transform.rotation.z;
+         q_normal[3] = transformStamped.transform.rotation.w;
        }
 
     catch(tf2::TransformException &ex){
@@ -377,7 +473,7 @@ int main(int argc, char **argv) {
         }
 
     // Thread a process for the virtual fixture calculation
-    std::thread t1(&vfSurface,n);
+    std::thread t1(&vfSurface,n,filename);
 
     while (ros::ok() && !quit) {
         pollInput(hybrid_pub,scaling_factors.data(),offsets.data(), &clutch, &reset_center, &freeze);
