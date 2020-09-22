@@ -46,7 +46,10 @@ FalconDevice m_falconDevice;
 array<double, 3> falcon_vel = {0.0, 0.0, 0.0};
 std::array<double, 3> frozen_position = {0.0, 0.0, 0.0};
 std::array<double, 3> last_falcon = {0.0, 0.0, 0.0};
-array<double,4> q_normal;
+
+array<double,4> q_normal = {0.0, 0.0, 0.0, 1.0};
+array<double,4> q_prev = {0.0, 0.0, 0.0, 1.0};
+
 
 // For the NL optimization
 typedef struct {
@@ -58,6 +61,8 @@ array<double, 3> actual_pos;
 
 bool last_falcon_updated = false;
 
+
+
 // For recording
 std::ofstream outputfile;
 double x, y, z, fx, fy, fz;
@@ -65,6 +70,65 @@ double cx, cy, cz;
 double dmp_fx, dmp_fy, dmp_fz;
 
 bool replay_active = false;
+
+
+/**
+* Orientation interpolation
+* based on https://en.wikipedia.org/wiki/Slerp
+* interpolation, x, is 0 to 1 bounded
+*/
+array<double,4> slerp(array<double,4> q_start, array<double,4> q_end,double x){
+    array<double,4> q_interp;
+    
+    // Make sure quaterions are properly normalized
+    double mag_q_start = sqrt(q_start[0]*q_start[0]+q_start[1]*q_start[1]+q_start[2]*q_start[2]+q_start[3]*q_start[3]);
+    q_start[0] = q_start[0]/mag_q_start; q_start[1] = q_start[1]/mag_q_start;
+    q_start[2] = q_start[2]/mag_q_start; q_start[3] = q_start[3]/mag_q_start;
+
+    double mag_q_end = sqrt(q_end[0]*q_end[0]+q_end[1]*q_end[1]+q_end[2]*q_end[2]+q_end[3]*q_end[3]);
+    q_end[0] = q_end[0]/mag_q_end; q_end[1] = q_end[1]/mag_q_end;
+    q_end[2] = q_end[2]/mag_q_end; q_end[3] = q_end[3]/mag_q_end;
+    
+    // Compute the cosine of the angle between the two vectors.
+    // dot product for quaternions is normal vector inner product
+    double dot = q_start[0]*q_end[0]+q_start[1]*q_end[1]+q_start[2]*q_end[2]+q_start[3]*q_end[3];
+
+    // make sure the shorter path is chosen
+    if (dot < 0.0f) {
+        q_end[0] = -q_end[0]; q_end[1] = -q_end[1]; q_end[2] = -q_end[2]; q_end[3] = -q_end[3];
+        dot = -dot;
+    }
+
+    const double DOT_THRESHOLD = 0.9995;
+    if (dot > DOT_THRESHOLD) {
+        // for close vectors, linear interpolation
+        q_interp[0] = q_start[0]+x*(q_end[0]-q_start[0]);
+        q_interp[1] = q_start[1]+x*(q_end[1]-q_start[1]);
+        q_interp[2] = q_start[2]+x*(q_end[2]-q_start[2]);
+        q_interp[3] = q_start[3]+x*(q_end[3]-q_start[3]);
+        
+        double mag_q_interp = sqrt(q_interp[0]*q_interp[0]+q_interp[1]*q_interp[1]+q_interp[2]*q_interp[2]+q_interp[3]*q_interp[3]);
+        q_interp[0] = q_interp[0]/mag_q_interp; q_interp[1] = q_interp[1]/mag_q_interp;
+        q_interp[2] = q_interp[2]/mag_q_interp; q_interp[3] = q_interp[3]/mag_q_interp;
+        return q_interp;
+    }
+
+    double theta_0 = acos(dot);
+    double theta = theta_0*x;
+    double sin_theta = sin(theta);
+    double sin_theta_0 = sin(theta_0);
+
+    double s0 = cos(theta) - dot * sin_theta / sin_theta_0;
+    double s1 = sin_theta / sin_theta_0;
+
+    q_interp[0] = s0*q_start[0]+s1*q_end[0];
+    q_interp[1] = s0*q_start[1]+s1*q_end[1];
+    q_interp[2] = s0*q_start[2]+s1*q_end[2];
+    q_interp[3] = s0*q_start[3]+s1*q_end[3];
+
+    return q_interp;
+}
+
 
 void signalHandler(int sig)
 {
@@ -176,87 +240,103 @@ array<double,3> crossProduct(array<double,3> x, array<double,3> y){
     return return_vec;
 }
 
-void vfSurface(ros::NodeHandle n){
+void vfSurface(ros::NodeHandle n, string filename){
     std::string rospath = ros::package::getPath("dmp_deformations");
     BSplineSurface surface;
-    surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+"layup2"+".csv");
-    double u = 0.5;
-    double v = 0.5;
-    array<double,3> r;
-    array<double,3> n_hat;
-    array<double,3> r_u;
-    array<double,3> r_v;
 
-    // Find the closest point on the surface using NL-opt
-    nlopt::opt opt(nlopt::LD_SLSQP, 2);
-    
-    // Bounds of surface are 0 to 1 in U,V directions
-    std::vector<double> lb(2);
-    lb[0] = 0.0; lb[1] = 0.0;
-    std::vector<double> ub(2);
-    ub[0] = 1.0; ub[1] = 1.0;
-    opt.set_lower_bounds(lb);
-    opt.set_upper_bounds(ub);
+    // Find closest surface point if there is a surface to find!!
+    if(filename!=""){    
+        surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+filename+".csv");
+        double u = 0.5;
+        double v = 0.5;
+        array<double,3> r;
+        array<double,3> n_hat;
+        array<double,3> r_u;
+        array<double,3> r_v;
 
-    // Initial guess for parameters U,V
-    std::vector<double> params(2);
-    params[0] = u; params[1] = v;
-    double minf;
+        // Find the closest point on the surface using NL-opt
+        nlopt::opt opt(nlopt::LD_SLSQP, 2);
+        
+        // Bounds of surface are 0 to 1 in U,V directions
+        std::vector<double> lb(2);
+        lb[0] = 0.0; lb[1] = 0.0;
+        std::vector<double> ub(2);
+        ub[0] = 1.0; ub[1] = 1.0;
+        opt.set_lower_bounds(lb);
+        opt.set_upper_bounds(ub);
 
-    opt_data data;
-    data.surface = surface;
-    opt.set_xtol_rel(1e-2);
+        // Initial guess for parameters U,V
+        std::vector<double> params(2);
+        params[0] = u; params[1] = v;
+        double minf;
 
-    ros::Publisher closest_pub = n.advertise<geometry_msgs::Vector3>("/vfclosest", 1);
-    geometry_msgs::Vector3 loc;
+        opt_data data;
+        data.surface = surface;
+        opt.set_xtol_rel(1e-2);
+        opt.set_maxeval(20);
 
-    usleep(500000);
+        ros::Publisher closest_pub = n.advertise<geometry_msgs::Vector3>("/vfclosest", 1);
+        geometry_msgs::Vector3 loc;
 
-    while(1){
-        auto start = high_resolution_clock::now(); 
+        usleep(500000);
 
-        try{
-            cout << "Start Opt" << endl;
-            data.x=x; data.y=y; data.z=z;
-            opt.set_min_objective(obj_closest_surface,&data);
-            nlopt::result result = opt.optimize(params, minf);
+        while(1){
+            auto start = high_resolution_clock::now(); 
 
-            cout << "RES:" << result << endl;
+            try{
+                cout << "Start Opt" << endl;
+                data.x=x; data.y=y; data.z=z;
+                opt.set_min_objective(obj_closest_surface,&data);
+                nlopt::result result = opt.optimize(params, minf);
+
+                cout << "RES:" << result << endl;
+                
+                // Output new values if found
+                u = params[0]; v=params[1];
+            }
+            catch(std::exception &e) {
+                std::cout << "nlopt failed: " << e.what() << std::endl;
+            }
+
+
+            auto end = high_resolution_clock::now(); 
+            auto duration = duration_cast<microseconds>(end - start);
+            start = high_resolution_clock::now(); 
+            surface.calculateSurfacePoint(u,v,r,n_hat,r_u,r_v);
             
-            // Output new values if found
-            u = params[0]; v=params[1];
+            end = high_resolution_clock::now(); 
+            duration = duration_cast<microseconds>(end - start);
+            loc.x = r[0];
+            loc.y = r[1];
+            loc.z = r[2];
+            cx= r[0]; cy = r[1]; cz=r[2];
+            closest_pub.publish(loc);
+
+            array<double,3> static_dir;
+
+            if(filename=="layup2"){
+                //switch direction for joint limits
+                // currently rotates counterclockwise!
+                static_dir[0] = -r_v[0];
+                static_dir[1] = -r_v[1];
+                static_dir[2] = -r_v[2];
+            }
+
+            else if(filename=="cowling4"){
+                static_dir[0] = r_v[0];
+                static_dir[1] = r_v[1];
+                static_dir[2] = r_v[2];
+            }
+
+            
+            rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
+            // cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
+            // cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
+            // cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
+            cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
+            //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
+            usleep(10000);
         }
-        catch(std::exception &e) {
-            std::cout << "nlopt failed: " << e.what() << std::endl;
-        }
-
-
-        auto end = high_resolution_clock::now(); 
-        auto duration = duration_cast<microseconds>(end - start);
-        start = high_resolution_clock::now(); 
-        surface.calculateSurfacePoint(u,v,r,n_hat,r_u,r_v);
-        
-        end = high_resolution_clock::now(); 
-        duration = duration_cast<microseconds>(end - start);
-        loc.x = r[0];
-        loc.y = r[1];
-        loc.z = r[2];
-        cx= r[0]; cy = r[1]; cz=r[2];
-        closest_pub.publish(loc);
-
-        //switch direction for joint limits
-        r_v[0] = -r_v[0];
-        r_v[1] = -r_v[1];
-        r_v[2] = -r_v[2];
-        
-        rotationToQuaternion(r_v,crossProduct(n_hat, r_v), n_hat, q_normal);
-        array<double,3> temp = crossProduct(n_hat, r_v);
-        cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
-        cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
-        cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
-        cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
-        //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
-        usleep(10000);
     }
 }
 
@@ -422,11 +502,15 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     }
 
     // set the orientation based on the normal
-    panda_pos[3] = q_normal[0];
-    panda_pos[4] = q_normal[1];
-    panda_pos[5] = q_normal[2];
-    panda_pos[6] = q_normal[3];
+    array<double,4> q_filt;
+    q_filt = slerp(q_prev, q_normal,0.01);
+    panda_pos[3] = q_filt[0];
+    panda_pos[4] = q_filt[1];
+    panda_pos[5] = q_filt[2];
+    panda_pos[6] = q_filt[3];
 
+    // save prev_orientation
+    q_prev[0] = q_filt[0]; q_prev[1] = q_filt[1]; q_prev[2] = q_filt[2]; q_prev[3] = q_filt[3]; 
 
     // For recording
     x = panda_pos[0];
@@ -455,17 +539,6 @@ void feedbackFalcon(geometry_msgs::Wrench wrench) {
                 wrench.force.x * scale-viscous*falcon_vel[2]+vf_stiffness*(x-cx)});
     }
 
-    else{
-        // zero displacement running in other process
-
-        //  // zero displacement mode
-        // // falcon has offset in z
-        // m_falconDevice.setForce({
-        //         -stiffness*falconPos[0]-viscous_replay*falcon_vel[0], 
-        //         -stiffness*falconPos[1]-viscous_replay*falcon_vel[1], 
-        //         -stiffness*(falconPos[2]-0.1)-viscous_replay*falcon_vel[2]});
-    }
-
     // For recording and hybrid replay
     fx = wrench.force.x;
     fy = wrench.force.y;
@@ -481,6 +554,12 @@ void actualPose(geometry_msgs::Pose pose) {
 
 int main(int argc, char **argv) {    
     ros::init(argc, argv, "Falcon");
+
+    string filename="";
+    if(argc>1){
+        filename=argv[1];
+    }
+
         //Setup the signal handler for exiting
     signal(SIGINT, signalHandler);
 
@@ -521,6 +600,14 @@ int main(int argc, char **argv) {
          offsets[0] = transformStamped.transform.translation.x;
          offsets[1] = transformStamped.transform.translation.y;
          offsets[2] = transformStamped.transform.translation.z;
+         q_prev[0] = transformStamped.transform.rotation.x;
+         q_prev[1] = transformStamped.transform.rotation.y;
+         q_prev[2] = transformStamped.transform.rotation.z;
+         q_prev[3] = transformStamped.transform.rotation.w;
+         q_normal[0] = transformStamped.transform.rotation.x;
+         q_normal[1] = transformStamped.transform.rotation.y;
+         q_normal[2] = transformStamped.transform.rotation.z;
+         q_normal[3] = transformStamped.transform.rotation.w;
        }
 
     catch(tf2::TransformException &ex){
@@ -531,7 +618,7 @@ int main(int argc, char **argv) {
     pollInput(hybrid_pub,scaling_factors.data(),offsets.data(), &clutch, &reset_center, &freeze);
     
     // Thread a process for the virtual fixture calculation
-    std::thread t1(&vfSurface,n);
+    std::thread t1(&vfSurface,n,filename);
     
     while(ros::ok() && (!quit)){      
         pollInput(hybrid_pub,scaling_factors.data(),offsets.data(), &clutch, &reset_center, &freeze);
