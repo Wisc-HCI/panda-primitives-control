@@ -54,6 +54,14 @@ function getTransformStamped(objHandle,name,relTo,relToName)
     t=sim.getSystemTime()
     p=__getObjectPosition__(objHandle,relTo)
     o=__getObjectQuaternion__(objHandle,relTo)
+    
+    
+    -- rotate out by the EE rotation (ee_rotation is inverted)
+    o_rotated_w = ee_rotation_qw*o[1]+ee_rotation_qx*o[2]+ee_rotation_qy*o[3]+ee_rotation_qz*o[4]
+    o_rotated_x = ee_rotation_qw*o[2]-ee_rotation_qx*o[1]+ee_rotation_qy*o[4]-ee_rotation_qz*o[3]
+    o_rotated_y = ee_rotation_qw*o[3]-ee_rotation_qx*o[4]-ee_rotation_qy*o[1]+ee_rotation_qz*o[2]
+    o_rotated_z = ee_rotation_qw*o[4]+ee_rotation_qx*o[3]-ee_rotation_qy*o[2]-ee_rotation_qz*o[1]
+    
     return {
         header={
             stamp=t,
@@ -62,7 +70,7 @@ function getTransformStamped(objHandle,name,relTo,relToName)
         child_frame_id=name,
         transform={
             translation={x=p[1],y=p[2],z=p[3]},
-            rotation={x=o[2],y=o[3],z=o[4],w=o[1]}
+            rotation={x=o_rotated_x,y=o_rotated_y,z=o_rotated_z,w=o_rotated_w}
         }
     }
 end
@@ -76,6 +84,11 @@ function getDesiredHybrid(msg)
     desired_qy = msg.pose.orientation.y
     desired_qz = msg.pose.orientation.z
     desired_qw = msg.pose.orientation.w
+    
+    desired_qw = ee_rotation_qw*msg.pose.orientation.w-ee_rotation_qx*msg.pose.orientation.x-ee_rotation_qy*msg.pose.orientation.y-ee_rotation_qz*msg.pose.orientation.z
+    desired_qx = ee_rotation_qw*msg.pose.orientation.x+ee_rotation_qx*msg.pose.orientation.w-ee_rotation_qy*msg.pose.orientation.z+ee_rotation_qz*msg.pose.orientation.y
+    desired_qy = ee_rotation_qw*msg.pose.orientation.y+ee_rotation_qx*msg.pose.orientation.z+ee_rotation_qy*msg.pose.orientation.w-ee_rotation_qz*msg.pose.orientation.x
+    desired_qz = ee_rotation_qw*msg.pose.orientation.z-ee_rotation_qx*msg.pose.orientation.y+ee_rotation_qy*msg.pose.orientation.x+ee_rotation_qz*msg.pose.orientation.w
     
     -- Wrench
     desired_fx = msg.wrench.force.x
@@ -172,11 +185,16 @@ function sysCall_init()
     desired_qz = 0.0
     desired_qw = 1.0
     
+    ee_rotation_qx = 0.0
+    ee_rotation_qy = 0.0
+    ee_rotation_qz = 0.0
+    ee_rotation_qw = 1.0
+    
     desired_fx = 0.0
     desired_fy = 0.0
     desired_fz = 0.0
     
-    force_gain = 0.01
+    force_gain = 0.005
     
     -- Starting selection matrix
     selection = {1, 1, 1}
@@ -192,6 +210,7 @@ function sysCall_init()
     baseLink = sim.getObjectHandle("Franka_joint1")
     tipDummy = sim.getObjectHandle("Tip")
     ftreader = sim.getObjectHandle("Franka_connection")
+    ft_control_publisher=simROS.advertise('/panda/control_wrench','geometry_msgs/Wrench')
     ft_publisher=simROS.advertise('/panda/wrench','geometry_msgs/Wrench')
     
     -- The first time there is a non-zero force, it
@@ -239,14 +258,27 @@ function sysCall_actuation()
         }
     }
     
-    -- Coppeliasim gives applied vs reaction force.
+       -- Coppeliasim gives applied vs reaction force.
+    fx_local,fy_local,fz_local = vectorIntoConstraintFrame(cqx,cqy,cqz,cqw,ft.force.x,ft.force.y,ft.force.z)
     ft_reaction =
     {
         force=
         {
-            x = -ft.force.x,
-            y = -ft.force.y,
-            z = -ft.force.z
+            x = -fx_local,
+            y = -fy_local,
+            z = -fz_local
+        }
+    }
+    
+    simROS.publish(ft_control_publisher,ft_reaction)
+    
+    ft_reaction_global =
+    {
+        force=
+        {
+            x = ft.force.x,
+            y = ft.force.y,
+            z = ft.force.z
         }
     }
     
