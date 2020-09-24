@@ -66,13 +66,13 @@ def printHoleSpiral(csvfile, starting_point, num_pts, alpha_a, alpha_b, frequenc
 
     slerp = Slerp(key_inds, key_rots)
 
-    freq_update = 0
+    theta = 0
 
     for ii in range(0, num_pts):
         # Position
-        freq_update += 1.0*np.exp(-0.01*ii)
-        interp_x = starting_point[0] + alpha_a*ii*np.cos(frequency*freq_update/num_pts)
-        interp_y = starting_point[1] + alpha_b*ii*np.sin(frequency*freq_update/num_pts)
+        theta = theta+(1-(float(ii)/float(num_pts)))
+        interp_x = starting_point[0] + alpha_a*np.sin(frequency/5*theta/num_pts)
+        interp_y = starting_point[1] + alpha_b*np.sin(frequency*theta/num_pts)
         interp_z = starting_point[2]
 
         # Orientation
@@ -265,7 +265,8 @@ def layup2():
         csvfile.write(
             "2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2")
         csvfile.write('\n')
-
+        csvfile.write("0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.2,0.1")
+        csvfile.write('\n')
         homing_point = np.array([0.6, -0.3, 0.20])
         homing_point_2 = np.array([0.52, 0.1, 0.20])
         force = -5.0
@@ -392,84 +393,106 @@ def fastenerInsertion():
         surfaceModel = PyBSpline.BSplineSurface()
         surfaceModel.loadSurface("fastener1")
 
-        csvfile.write(",,,,,fastener1,")
+        csvfile.write(",,,,,fastener1,,,,,,,fastener1,,,,,,,fastener1,")
         csvfile.write('\n')
-        csvfile.write("release,,grasp,,,peginhole,,") # preaction/conditional logic fxn
+        csvfile.write("release,,grasp,,,peginhole,,release,,grasp,,,peginhole,,release,,grasp,,,peginhole,,") # preaction/conditional logic fxn
         csvfile.write('\n')
-        csvfile.write("0,100,200,300,400,500,600")
+        csvfile.write("0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000")
         csvfile.write('\n')
-        csvfile.write("1,1,1,1,1,0,1")
+        csvfile.write("1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1")
         csvfile.write('\n')
-        csvfile.write("2 2 2,2 2 2,2 2 2,2 2 2,2 2 2,5 5 150,2 2 2")
+        csvfile.write("2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2,2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2,2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2")
         csvfile.write('\n')
+        csvfile.write("0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1")
+        csvfile.write('\n')
+
+        # Apply a rotation and a translation to all of the points
+        R = np.array([[0.99978826, 0.00928849, -0.01836173],
+                      [-0.00907831, 0.9998927, 0.01149706],
+                      [0.01846655, -0.01132793, 0.9997653]])
+
+
+        t_addtl = np.matmul(R, np.array([0.025,0.0, 0.0]).reshape((3, 1))).reshape((3,))
 
         holder_location = np.array([0.52434668, 0.21501005, 0.02388816])
+
+        holder_locations = []
+        holder_locations.append(holder_location+t_addtl)
+        holder_locations.append(holder_location)
+        holder_locations.append(holder_location-t_addtl)
+
         cowling_location = np.array([ 0.5085376 , -0.06548236,  0.14053339])
 
+        cowling_locations = []
+        cowling_locations.append((0.75,0.5))
+        cowling_locations.append((0.38,0.5))
+        cowling_locations.append((0.15,0.5))
 
-        # Hybrid
-        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.8,0.5)
-        starting_vel = r_u * 0.0 + r_v * 1.0
-        starting_vel = starting_vel / np.linalg.norm(starting_vel)
-        starting_y = np.cross(normal_start, starting_vel)
-        qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
-        above_surf = surface_start + 0.002 * normal_start + 0.08*normal_start
+        for ii in range(0,3):
 
-        print("NORMAL:",normal_start)
+            holder_location = holder_locations[ii]
 
-        print("AS:",above_surf)
-        print("SS:",surface_start)
+            # Hybrid
+            surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(cowling_locations[ii][0],cowling_locations[ii][1])
+            starting_vel = r_u * 0.0 + r_v * 1.0
+            starting_vel = starting_vel / np.linalg.norm(starting_vel)
+            starting_y = np.cross(normal_start, starting_vel)
+            qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
+            above_surf = surface_start + 0.073*normal_start
 
+            print("NORMAL:",normal_start)
 
+            print("AS:",above_surf)
+            print("SS:",surface_start)
 
-        homing_point = np.array([0.45, 0.0, 0.3])
-        q_straight = np.array([0.0, 0.0, 0.0, 1.0])
-        q_sideways = np.array([0.0, 0.0, 0.7071068, 0.7071068])
-        force = -5.0
+            homing_point = np.array([0.45, 0.0, 0.3])
+            q_straight = np.array([0.0, 0.0, 0.0, 1.0])
+            q_sideways = np.array([0.0, 0.0, 0.7071068, 0.7071068])
+            force = -5.0
 
-        printPathSection(csvfile, np.array(
-            [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [holder_location[0], holder_location[1], holder_location[2]+0.15, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [holder_location[0], holder_location[1], holder_location[2]+0.15, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
-        printPathSection(csvfile, np.array(
-            [holder_location[0], holder_location[1], holder_location[2]+0.13, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [holder_location[0], holder_location[1], holder_location[2]+0.13, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
-        printPathSection(csvfile, np.array(
-            [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
-        printPathSection(csvfile, np.array(
-            [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [above_surf[0], above_surf[1], above_surf[2]+0.1, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [above_surf[0], above_surf[1], above_surf[2]+0.05, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
-        printPathSection(csvfile, np.array(
-            [above_surf[0], above_surf[1], above_surf[2]+0.1, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [above_surf[0], above_surf[1], above_surf[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [above_surf[0], above_surf[1], above_surf[2]+0.05, q_straight[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [above_surf[0], above_surf[1], above_surf[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
-        printHoleSpiral(csvfile, np.array([0.8, 0.5, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),num_pts,0.001,0.01,25)
+            printHoleSpiral(csvfile, np.array([cowling_locations[ii][0], cowling_locations[ii][1], 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),num_pts,0.015,0.2,15)
 
-        printPathSection(csvfile, np.array(
-            [above_surf[0], above_surf[1], above_surf[2]+0.15, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
-             0.0]),
-                         np.array(
-                             [homing_point[0], homing_point[1], homing_point[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
-                              0.0, 0.0, 0.0]), num_pts)
+            printPathSection(csvfile, np.array(
+                [above_surf[0], above_surf[1], above_surf[2]+0.15, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
+                 0.0]),
+                             np.array(
+                                 [homing_point[0], homing_point[1], homing_point[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
+                                  0.0, 0.0, 0.0]), num_pts)
 
 
 def main():

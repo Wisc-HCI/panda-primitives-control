@@ -53,6 +53,12 @@ class DMP:
         self.kinematic_data=[]
         self.desired_forcing=[]
 
+        # TODO: fix this, hack to make it work for not exacly 200 points!!!
+        self.s = np.exp(-self.s_alpha * np.arange(0, self.num_points) * self.dt)  # decay function
+
+        if self.num_points<200:
+            self.gmm_states = self.num_points/4
+
         # demonstration_data is a list of demonstrations
         self.number_demos = len(demonstration_data)
 

@@ -368,7 +368,8 @@ void DeformationController::getClosestParams(double x, double y, double z, doubl
     data.surface = surface;
 
     opt.set_min_objective(obj_closest_surface,&data);
-    opt.set_xtol_rel(1e-4);
+    opt.set_xtol_rel(1e-2);
+    opt.set_maxeval(20);
 
     try{
         nlopt::result result = opt.optimize(params, minf);
@@ -670,8 +671,14 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
         if(surface_name=="cowling4"){
             vel_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
         }
+        else if(surface_name=="fastener1"){
+            vel_hat[0]=x_hat[0]*0.0+y_hat[0]*-1.0; vel_hat[1]=x_hat[1]*0.0+y_hat[1]*-1.0; vel_hat[2]=x_hat[2]*0.0+y_hat[2]*-1.0; // old velocity
+            cout << "FASTENER FASTENER" << endl << "FASTENER" << endl;
+            cout << "V:" << vel_hat[0] << ", " << vel_hat[1] << ", " << vel_hat[2] << endl;
+        }
         else{
             vel_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; vel_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; vel_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
+            cout << "ELSEIDEEE BOOO" << endl;
         }
         
     }
@@ -701,6 +708,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     bool proper_contact = false;
     bool previous_sample_force = false;
     int num_good_samples = 0;
+    int reqd_good_samples = 50;
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
@@ -716,7 +724,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
             num_good_samples = 0;
         }
 
-        if(num_good_samples>200){
+        if(num_good_samples>50){
             proper_contact=true;
         }
         
@@ -1064,11 +1072,13 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         if(preactions[ii]!="")
         {
             // publish to the event channel
-            usleep(1000000);
-            std_msgs::String actionstr;
-            actionstr.data = preactions[ii];
-            event_pub.publish(actionstr);
-            usleep(1000000);
+            if(preactions[ii]=="grasp" || preactions[ii]=="release"){
+                usleep(1000000);
+                std_msgs::String actionstr;
+                actionstr.data = preactions[ii];
+                event_pub.publish(actionstr);
+                usleep(1000000);
+            }
 
             // todo: add conditional logic
         }
@@ -1137,7 +1147,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         catch(tf2::TransformException &ex){
             cout << "Can't get TF2" << endl << ex.what() << endl;
         }
-        double starting_z = actual_pos[2];
+        double starting_z = 0.2002; // MH: hardcoded for task
+        cout << "starting z:" << starting_z << endl;
 
         array<double,2> prev_uv = {-1, -1};
 
@@ -1165,10 +1176,92 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 catch(tf2::TransformException &ex){
                     cout << "Can't get TF2" << endl << ex.what() << endl;
                 }
-                cout << "DIFF:" << abs(starting_z-actual_pos[2]) << endl;
-                if(abs(starting_z-actual_pos[2])>0.005){
-                    // call this new function thing!!
+                //cout << "DIFF:" << abs(starting_z-actual_pos[2]) << endl;
+                if(abs(starting_z-actual_pos[2])>0.008){
+                    // similar to force onloading... go down until a force for a while
+                    // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
+                    // This loop monitors the robot which has started moving in the
+                    // force direction until it achieves the desired force (within a tolerance)
+                    bool proper_contact = false;
+                    bool previous_sample_force = false;
+                    int num_good_samples = 0;
+                    int reqd_good_samples = 50;
+                    while(!proper_contact)
+                    {
+                        //proper_contact=true; // TODO: REMOVE/FIX THIS
+                        cout << "FZ: " << fz << " " << starting_points[ii][2] << " # good: " << num_good_samples << endl;
+                        // reaction force so flip sign
+                        // MH use absolute value for easier computation - should be overdamped
+                        //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
+                        if(abs(fz)>0.30*abs(starting_points[ii][2]))
+                        {
+                            num_good_samples++;
+                        }
+                        else{
+                            num_good_samples = 0;
+                        }
+
+                        if(num_good_samples>50){
+                            proper_contact=true;
+                        }
+                        
+                        // get new force readings and wait 1 ms
+                        ros::spinOnce();
+                        usleep(1000);
+                    }
+
+                    // Release the gripper
+                    std_msgs::String actionstrtemp;
+                    actionstrtemp.data = "release";
+                    event_pub.publish(actionstrtemp);
+                    usleep(1000000);
+
+                    // Now go up
+                    // current position from TF2
+                    ros::spinOnce();
+                    try{
+                        geometry_msgs::TransformStamped transformStamped;
+                        transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                        actual_pos[0] = transformStamped.transform.translation.x;
+                        actual_pos[1] = transformStamped.transform.translation.y;
+                        actual_pos[2] = transformStamped.transform.translation.z;
+                        actual_orientation[0] = transformStamped.transform.rotation.x;
+                        actual_orientation[1] = transformStamped.transform.rotation.y;
+                        actual_orientation[2] = transformStamped.transform.rotation.z;
+                        actual_orientation[3] = transformStamped.transform.rotation.w;
+                    }
+
+                    catch(tf2::TransformException &ex){
+                        cout << "Can't get TF2" << endl << ex.what() << endl;
+                    }
+
+
+                    double xs = actual_pos[0];
+                    double ys = actual_pos[1];
+                    double zs = actual_pos[2];
+
+                    // set up position control for interpolation
+                    constraint_frame.x = 0.0; constraint_frame.y = 0.0; constraint_frame.z = 0.0; constraint_frame.w = 1.0;
+                    hybridPose.pose.orientation.x = actual_orientation[0]; hybridPose.pose.orientation.y = actual_orientation[1]; hybridPose.pose.orientation.z = actual_orientation[2]; hybridPose.pose.orientation.w = actual_orientation[3];
+                    hybridPose.wrench.force.x = 0.0; hybridPose.wrench.force.y = 0.0; hybridPose.wrench.force.z = 0.0;
+                    hybridPose.constraint_frame = constraint_frame;
+                    hybridPose.sel_vector = {1, 1, 1, 1, 1, 1};
+
+                    array<double,4> starting_orientation = {starting_points[0][3], starting_points[0][4], starting_points[0][5], starting_points[0][6]};
+
+                    // Interpolate over the course of 2 seconds to starting position
+                    for(int jj=0; jj<2000; jj++)
+                    {
+                        ros::spinOnce();
+                        hybridPose.pose.position.x = xs;
+                        hybridPose.pose.position.y = ys;
+                        hybridPose.pose.position.z = zs+(0.37-zs)*((jj*1.0)/2000.0);
+
+                        hybrid_pub.publish(hybridPose);
+                        usleep(1000);
+                    }
+                    
                     break;
                 }
             }
@@ -1272,6 +1365,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             y_def = y_def + dy_imp*0.01*abs(delta_s);
 
             y = y_imp+y_def; 
+
+            cout << "xy_nom: " << x_imp << " " << y_imp << endl; 
 
             // Calculate New Z (State 3)
             if(delta_s>=0.0){ //forwards
@@ -1415,8 +1510,12 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     if(surfaces[ii]=="cowling4"){
                         v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
                     }
+
+                    else if(surfaces[ii]=="fastener1"){
+                        v_hat[0]=x_hat[0]*0.0+y_hat[0]*-1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*-1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*-1.0; // old velocity
+                    }
                     else{
-                        v_hat[0]=x_hat[0]*-1.0+y_hat[0]*0.0; v_hat[1]=x_hat[1]*-1.0+y_hat[1]*0.0; v_hat[2]=x_hat[2]*-1.0+y_hat[2]*0.0; // old velocity
+                        v_hat[0]=x_hat[0]*0.0+y_hat[0]*1.0; v_hat[1]=x_hat[1]*0.0+y_hat[1]*1.0; v_hat[2]=x_hat[2]*0.0+y_hat[2]*1.0; // old velocity
                     }
                 }
                 double v_mag = sqrt(v_hat[0]*v_hat[0] + v_hat[1]*v_hat[1] + v_hat[2]*v_hat[2]);
@@ -1469,7 +1568,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     array<double,4> q_out;
                     rotationToQuaternion(v_hat,y_new,n_hat,q_out);
                     constraint_frame.x = q_out[0]; constraint_frame.y = q_out[1]; constraint_frame.z = q_out[2]; constraint_frame.w = q_out[3];
-                    cout << "CF:" << q_out[0] << " " << q_out[1] << " " << q_out[2] << " " << q_out[3] << endl;
+                    //cout << "CF:" << q_out[0] << " " << q_out[1] << " " << q_out[2] << " " << q_out[3] << endl;
                 }
 
                 // Orientation is now just the identity in the constraint frame
@@ -1511,7 +1610,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
             // Allow up to 30 percent backwards
             delta_s = 1.0+1.6*dp_in_dir;
-            cout << "DS:" << delta_s << endl;
+            //cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
 
