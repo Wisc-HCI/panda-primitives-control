@@ -178,7 +178,7 @@ array<double,3> crossProduct(array<double,3> x, array<double,3> y){
 void vfSurface(ros::NodeHandle n, string filename){
     std::string rospath = ros::package::getPath("dmp_deformations");
     BSplineSurface surface;
-    surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+"layup2"+".csv");
+    surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+filename+".csv");
     double u = 0.5;
     double v = 0.5;
     array<double,3> r;
@@ -397,7 +397,7 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
 }
 
 void feedbackInput(geometry_msgs::Wrench wrench) {
-    double scale = 0.4; // force reflection
+    double scale = 0.6; // force reflection
     double stiffness = 200; // for replay
     double viscous = 50; // friction
 
