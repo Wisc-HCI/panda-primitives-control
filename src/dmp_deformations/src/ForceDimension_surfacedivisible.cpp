@@ -301,6 +301,7 @@ void vfSurface(ros::NodeHandle n, string filename){
             }
 
             rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
+            usleep(10000);
         }
     }
 }
