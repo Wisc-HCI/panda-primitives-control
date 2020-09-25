@@ -1150,7 +1150,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
 
 
-        double starting_z = 0.2002; // MH: hardcoded for task
+        double starting_z = 0.196; // MH: hardcoded for task .2002 for sim, .196 for real (rotated)
         cout << "starting z:" << starting_z << endl;
 
         array<double,2> prev_uv = {-1, -1};
@@ -1247,7 +1247,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     break;
                 }
 
-                else if(abs(starting_z-actual_pos[2])>0.008){
+                else if((starting_z-actual_pos[2])>0.005){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
