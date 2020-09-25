@@ -42,6 +42,9 @@ array<double, 3> actual_pos;
 
 std::ofstream outputfile;
 
+tf2_ros::Buffer tfBuffer;
+tf2_ros::TransformListener tfListener(tfBuffer);
+
 
 /**
 * Orientation interpolation
@@ -176,97 +179,129 @@ array<double,3> crossProduct(array<double,3> x, array<double,3> y){
 }
 
 void vfSurface(ros::NodeHandle n, string filename){
-    std::string rospath = ros::package::getPath("dmp_deformations");
-    BSplineSurface surface;
-    surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+filename+".csv");
-    double u = 0.5;
-    double v = 0.5;
-    array<double,3> r;
-    array<double,3> n_hat;
-    array<double,3> r_u;
-    array<double,3> r_v;
-
-    // Find the closest point on the surface using NL-opt
-    nlopt::opt opt(nlopt::LD_SLSQP, 2);
     
-    // Bounds of surface are 0 to 1 in U,V directions
-    std::vector<double> lb(2);
-    lb[0] = 0.0; lb[1] = 0.0;
-    std::vector<double> ub(2);
-    ub[0] = 1.0; ub[1] = 1.0;
-    opt.set_lower_bounds(lb);
-    opt.set_upper_bounds(ub);
+    if (filename=="layup2" || filename=="cowling4"){
+        std::string rospath = ros::package::getPath("dmp_deformations");
+        BSplineSurface surface;
+        surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+filename+".csv");
+        double u = 0.5;
+        double v = 0.5;
+        array<double,3> r;
+        array<double,3> n_hat;
+        array<double,3> r_u;
+        array<double,3> r_v;
 
-    // Initial guess for parameters U,V
-    std::vector<double> params(2);
-    params[0] = u; params[1] = v;
-    double minf;
+        // Find the closest point on the surface using NL-opt
+        nlopt::opt opt(nlopt::LD_SLSQP, 2);
+        
+        // Bounds of surface are 0 to 1 in U,V directions
+        std::vector<double> lb(2);
+        lb[0] = 0.0; lb[1] = 0.0;
+        std::vector<double> ub(2);
+        ub[0] = 1.0; ub[1] = 1.0;
+        opt.set_lower_bounds(lb);
+        opt.set_upper_bounds(ub);
 
-    opt_data data;
-    data.surface = surface;
-    opt.set_xtol_rel(1e-2);
+        // Initial guess for parameters U,V
+        std::vector<double> params(2);
+        params[0] = u; params[1] = v;
+        double minf;
 
-    ros::Publisher closest_pub = n.advertise<geometry_msgs::Vector3>("/vfclosest", 1);
-    geometry_msgs::Vector3 loc;
+        opt_data data;
+        data.surface = surface;
+        opt.set_xtol_rel(1e-2);
 
-    usleep(500000);
+        ros::Publisher closest_pub = n.advertise<geometry_msgs::Vector3>("/vfclosest", 1);
+        geometry_msgs::Vector3 loc;
 
-    while(1){
-        auto start = high_resolution_clock::now(); 
+        usleep(500000);
 
-        try{
-            cout << "Start Opt" << endl;
-            data.x=x; data.y=y; data.z=z;
-            opt.set_min_objective(obj_closest_surface,&data);
-            nlopt::result result = opt.optimize(params, minf);
+        while(1){
+            auto start = high_resolution_clock::now(); 
 
-            cout << "RES:" << result << endl;
+            try{
+                cout << "Start Opt" << endl;
+                data.x=x; data.y=y; data.z=z;
+                opt.set_min_objective(obj_closest_surface,&data);
+                nlopt::result result = opt.optimize(params, minf);
+
+                cout << "RES:" << result << endl;
+                
+                // Output new values if found
+                u = params[0]; v=params[1];
+            }
+            catch(std::exception &e) {
+                std::cout << "nlopt failed: " << e.what() << std::endl;
+            }
+
+
+            auto end = high_resolution_clock::now(); 
+            auto duration = duration_cast<microseconds>(end - start);
+            start = high_resolution_clock::now(); 
+            surface.calculateSurfacePoint(u,v,r,n_hat,r_u,r_v);
             
-            // Output new values if found
-            u = params[0]; v=params[1];
+            end = high_resolution_clock::now(); 
+            duration = duration_cast<microseconds>(end - start);
+            loc.x = r[0];
+            loc.y = r[1];
+            loc.z = r[2];
+            cx= r[0]; cy = r[1]; cz=r[2];
+            closest_pub.publish(loc);
+            
+            array<double,3> static_dir;
+
+            if(filename=="layup2"){
+                //switch direction for joint limits
+                // currently rotates counterclockwise!
+                static_dir[0] = -r_v[0];
+                static_dir[1] = -r_v[1];
+                static_dir[2] = -r_v[2];
+            }
+
+            else if(filename=="cowling4"){
+                static_dir[0] = r_v[0];
+                static_dir[1] = r_v[1];
+                static_dir[2] = r_v[2];
+            }
+
+            
+            rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
+            // cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
+            // cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
+            // cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
+            cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
+            //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
+            usleep(10000);
         }
-        catch(std::exception &e) {
-            std::cout << "nlopt failed: " << e.what() << std::endl;
+    }
+    else if (filename=="fastener1")
+    {
+        array<double,3> pos;
+        while (1){
+            try{
+                geometry_msgs::TransformStamped transformStamped;
+                transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                pos[0] = transformStamped.transform.translation.x;
+                pos[1] = transformStamped.transform.translation.y;
+                pos[2] = transformStamped.transform.translation.z;
+            }
+
+            catch(tf2::TransformException &ex){
+                cout << "COULDN'T GET TF FROM PANDA" << endl << ex.what() << endl;
+            }
+
+            array<double,3> static_dir;
+            array<double,3> n_hat = {0.0, 0.0, 1.0};
+            if(pos[1]<0.1){
+                static_dir = {0.0, 1.0, 0.0};
+            }
+
+            else{
+                static_dir = {1.0, 0.0, 0.0};
+            }
+
+            rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
         }
-
-
-        auto end = high_resolution_clock::now(); 
-        auto duration = duration_cast<microseconds>(end - start);
-        start = high_resolution_clock::now(); 
-        surface.calculateSurfacePoint(u,v,r,n_hat,r_u,r_v);
-        
-        end = high_resolution_clock::now(); 
-        duration = duration_cast<microseconds>(end - start);
-        loc.x = r[0];
-        loc.y = r[1];
-        loc.z = r[2];
-        cx= r[0]; cy = r[1]; cz=r[2];
-        closest_pub.publish(loc);
-        
-        array<double,3> static_dir;
-
-        if(filename=="layup2"){
-            //switch direction for joint limits
-            // currently rotates counterclockwise!
-            static_dir[0] = -r_v[0];
-            static_dir[1] = -r_v[1];
-            static_dir[2] = -r_v[2];
-        }
-
-        else if(filename=="cowling4"){
-            static_dir[0] = r_v[0];
-            static_dir[1] = r_v[1];
-            static_dir[2] = r_v[2];
-        }
-
-        
-        rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
-        // cout << "X:" << r_v[0] << " " << r_v[1] << " "  << r_v[2] << endl; 
-        // cout << "Y:" << temp[0] << " " << temp[1] << " "  << temp[2] << endl; 
-        // cout << "Z:" << n_hat[0] << " " << n_hat[1] << " "  << n_hat[2] << endl; 
-        cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
-        //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
-        usleep(10000);
     }
 }
 
@@ -334,9 +369,14 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     std::array<double, 7> panda_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
     std::array<double, 3> normalized_falcon = {0.0, 0.0, 0.0};
     
-    // These convert the falcon to match the respective directions on the Kinova!
-    normalized_falcon[0] = fdPos[0];
-    normalized_falcon[1] = fdPos[1];
+    // These convert the falcon to match the respective directions on the FD - behind robot!
+    //normalized_falcon[0] = fdPos[0];
+    //normalized_falcon[1] = fdPos[1];
+    //normalized_falcon[2] = fdPos[2];
+
+    // in front of robot
+    normalized_falcon[0] = -fdPos[0];
+    normalized_falcon[1] = -fdPos[1];
     normalized_falcon[2] = fdPos[2];
 
     // The first time the clutch is initiated, freeze the position of the falcon
@@ -396,18 +436,33 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     publishPose(hybrid_pub,panda_pos);
 }
 
+double old_force_x = 0.0;
+double old_force_y = 0.0;
+double old_force_z = 0.0;
+
+
 void feedbackInput(geometry_msgs::Wrench wrench) {
-    double scale = 0.6; // force reflection
+    double scale = 0.8; // force reflection
     double stiffness = 200; // for replay
-    double viscous = 50; // friction
+    double viscous = 100; // friction
+
+    // Filter forces
+    double alpha = 0.9;
+    double fx_interp = alpha*wrench.force.x + (1-alpha)*old_force_x;
+    double fy_interp = alpha*wrench.force.y + (1-alpha)*old_force_y;
+    double fz_interp = alpha*wrench.force.z + (1-alpha)*old_force_z;
+
+    old_force_x = wrench.force.x;
+    old_force_y = wrench.force.y;
+    old_force_z = wrench.force.z;
 
     array<double, 3> forceDimensionPos = {0,0,0};
     array<double, 3> forceDimensionVel = {0,0,0};
     dhdGetLinearVelocity(&forceDimensionVel[0],&forceDimensionVel[1],&forceDimensionVel[2]);
     // Send force (bilateral + friction) to the falcon
-    dhdSetForceAndTorque(-wrench.force.x * scale-viscous*forceDimensionVel[0], 
-            -wrench.force.y * scale-viscous*forceDimensionVel[1], 
-            wrench.force.z * scale-viscous*forceDimensionVel[2],0.0,0.0,0.0);
+    dhdSetForceAndTorque(-fx_interp * scale-viscous*forceDimensionVel[0], 
+            -fy_interp * scale-viscous*forceDimensionVel[1], 
+            fz_interp * scale-viscous*forceDimensionVel[2],0.0,0.0,0.0);
 }
 
 int main(int argc, char **argv) {
@@ -431,9 +486,6 @@ int main(int argc, char **argv) {
     ros::Subscriber force_sub = n.subscribe("/panda/wrench", 10, feedbackInput);
     ros::Publisher hybrid_pub = 
         n.advertise<panda_ros_msgs::HybridPose>("/panda/hybrid_pose", 1); 
-    
-    tf2_ros::Buffer tfBuffer;
-    tf2_ros::TransformListener tfListener(tfBuffer);
 
 
     if (!init_input()) {

@@ -124,10 +124,18 @@ void ForceDimensionDeformationController::run_zero_displacement_controller(){
 
         // Store forcing from device for deformations
         // Note: these should be unit-normalized (i.e., span from -1 to 1)
+        
         // the coordinate frame is to correspond with teleop of the panda from behind
-        dmp_fx = -(forceDimensionPos[0]-x_d)/(0.0625);
-        dmp_fy = -(forceDimensionPos[1]-y_d)/(0.12);
+        // dmp_fx = -(forceDimensionPos[0]-x_d)/(0.0625);
+        // dmp_fy = -(forceDimensionPos[1]-y_d)/(0.12);
+        // dmp_fz = (forceDimensionPos[2]-z_d)/(0.105);
+
+        // the coordinate frame is to correspond with teleop of the panda from in front
+        dmp_fx = (forceDimensionPos[0]-x_d)/(0.0625);
+        dmp_fy = (forceDimensionPos[1]-y_d)/(0.12);
         dmp_fz = (forceDimensionPos[2]-z_d)/(0.105);
+
+
         usleep(1000);
     }
 }

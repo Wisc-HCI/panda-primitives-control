@@ -459,6 +459,8 @@ void DeformationController::calculateDMPTransition(double ii, double &transition
             transition_y = v-starting_points[ii+1][1];
             transition_z = 0.0;
 
+            cout << "TRANSITIONYYYYY MCGEEEEEE"<< endl << "TRANSITIONYYYYY MCGEEEEEE" << endl << "TRANSITIONYYYYY MCGEEEEEE" << transition_x << " " << transition_y << endl << "TRANSITIONYYYYY MCGEEEEEE" << endl;
+
             transition_def_x = 0.0; transition_def_y = 0.0; transition_def_z = 0.0; 
         }
 
@@ -681,6 +683,23 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
             cout << "ELSEIDEEE BOOO" << endl;
         }
         
+    }
+
+    // FORCE ONLOADING BASED ON CURRENT POSITION!!
+    try{
+        geometry_msgs::TransformStamped transformStamped;
+        transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+        r[0] = transformStamped.transform.translation.x;
+        r[1] = transformStamped.transform.translation.y;
+        r[2] = transformStamped.transform.translation.z;
+        actual_orientation[0] = transformStamped.transform.rotation.x;
+        actual_orientation[1] = transformStamped.transform.rotation.y;
+        actual_orientation[2] = transformStamped.transform.rotation.z;
+        actual_orientation[3] = transformStamped.transform.rotation.w;
+    }
+
+    catch(tf2::TransformException &ex){
+        cout << "Can't get TF2" << endl << ex.what() << endl;
     }
 
     // Z (normal) x X (vel) = +Y
@@ -1108,6 +1127,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         double dx = 0.0, dy = 0.0, dz = 0.0;
         double x=starting_points[ii][0]+transition_x, y=starting_points[ii][1]+transition_y, z=starting_points[ii][2]+transition_z;
 
+        cout << "XY" << x << " " << y << endl;
+
         // For the general impedance model
         double ddx_imp, ddy_imp, ddz_imp;
         double dx_imp = 0.0, dy_imp=0.0, dz_imp=0.0;
@@ -1150,7 +1171,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
 
 
-        double starting_z = 0.196; // MH: hardcoded for task .2002 for sim, .196 for real (rotated)
+        double starting_z = 0.196; // MH: hardcoded for task
         cout << "starting z:" << starting_z << endl;
 
         array<double,2> prev_uv = {-1, -1};
@@ -1247,7 +1268,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     break;
                 }
 
-                else if((starting_z-actual_pos[2])>0.005){
+                else if((starting_z-surface_pos[2])>0.005){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
@@ -1281,14 +1302,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                         usleep(1000);
                     }
 
-                    // Release the gripper
-                    std_msgs::String actionstrtemp;
-                    actionstrtemp.data = "release";
-                    event_pub.publish(actionstrtemp);
-                    usleep(1000000);
-
-                    // Now go up
-                    // current position from TF2
+                     // current position from TF2
                     ros::spinOnce();
                     try{
                         geometry_msgs::TransformStamped transformStamped;
@@ -1306,7 +1320,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                         cout << "Can't get TF2" << endl << ex.what() << endl;
                     }
 
-
                     double xs = actual_pos[0];
                     double ys = actual_pos[1];
                     double zs = actual_pos[2];
@@ -1316,8 +1329,17 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     hybridPose.pose.orientation.x = actual_orientation[0]; hybridPose.pose.orientation.y = actual_orientation[1]; hybridPose.pose.orientation.z = actual_orientation[2]; hybridPose.pose.orientation.w = actual_orientation[3];
                     hybridPose.wrench.force.x = 0.0; hybridPose.wrench.force.y = 0.0; hybridPose.wrench.force.z = 0.0;
                     hybridPose.constraint_frame = constraint_frame;
+                    hybridPose.pose.position.x = xs; hybridPose.pose.position.y = ys; hybridPose.pose.position.z = zs;
                     hybridPose.sel_vector = {1, 1, 1, 1, 1, 1};
+                    hybrid_pub.publish(hybridPose);
 
+                    // Release the gripper
+                    std_msgs::String actionstrtemp;
+                    actionstrtemp.data = "release";
+                    event_pub.publish(actionstrtemp);
+                    usleep(1000000);
+
+                    // Now go up
                     array<double,4> starting_orientation = {starting_points[0][3], starting_points[0][4], starting_points[0][5], starting_points[0][6]};
 
                     // Interpolate over the course of 2 seconds to starting position
@@ -1679,7 +1701,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // Allow up to 30 percent backwards
-            delta_s = 1.0+1.6*dp_in_dir;
+            delta_s = 1.0+1.9*dp_in_dir;
             //cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;

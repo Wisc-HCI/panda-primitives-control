@@ -51,6 +51,9 @@ array<double,4> q_normal = {0.0, 0.0, 0.0, 1.0};
 array<double,4> q_prev = {0.0, 0.0, 0.0, 1.0};
 
 
+tf2_ros::Buffer tfBuffer;
+
+
 // For the NL optimization
 typedef struct {
     double x, y, z;
@@ -241,11 +244,10 @@ array<double,3> crossProduct(array<double,3> x, array<double,3> y){
 }
 
 void vfSurface(ros::NodeHandle n, string filename){
-    std::string rospath = ros::package::getPath("dmp_deformations");
-    BSplineSurface surface;
-
-    // Find closest surface point if there is a surface to find!!
-    if(filename!=""){    
+    
+    if (filename=="layup2" || filename=="cowling4"){
+        std::string rospath = ros::package::getPath("dmp_deformations");
+        BSplineSurface surface;
         surface.loadSurface(rospath+"/../../devel/lib/dmp_deformations/"+filename+".csv");
         double u = 0.5;
         double v = 0.5;
@@ -273,7 +275,6 @@ void vfSurface(ros::NodeHandle n, string filename){
         opt_data data;
         data.surface = surface;
         opt.set_xtol_rel(1e-2);
-        opt.set_maxeval(20);
 
         ros::Publisher closest_pub = n.advertise<geometry_msgs::Vector3>("/vfclosest", 1);
         geometry_msgs::Vector3 loc;
@@ -311,7 +312,7 @@ void vfSurface(ros::NodeHandle n, string filename){
             loc.z = r[2];
             cx= r[0]; cy = r[1]; cz=r[2];
             closest_pub.publish(loc);
-
+            
             array<double,3> static_dir;
 
             if(filename=="layup2"){
@@ -336,6 +337,35 @@ void vfSurface(ros::NodeHandle n, string filename){
             cout << "Q:" << q_normal[0] << " " << q_normal[1] << " "  << q_normal[2] << " " << q_normal[3] << endl; 
             //cout << "CP:" << r[0] << " " << r[1] << " " << r[2] << " time:" << duration.count()/1000000.0 << endl;
             usleep(10000);
+        }
+    }
+    else if (filename=="fastener1")
+    {
+        array<double,3> pos;
+        while (1){
+            try{
+                geometry_msgs::TransformStamped transformStamped;
+                transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                pos[0] = transformStamped.transform.translation.x;
+                pos[1] = transformStamped.transform.translation.y;
+                pos[2] = transformStamped.transform.translation.z;
+            }
+
+            catch(tf2::TransformException &ex){
+                cout << "COULDN'T GET TF FROM PANDA" << endl << ex.what() << endl;
+            }
+
+            array<double,3> static_dir;
+            array<double,3> n_hat = {0.0, 0.0, 1.0};
+            if(pos[1]<0.1){
+                static_dir = {0.0, 1.0, 0.0};
+            }
+
+            else{
+                static_dir = {1.0, 0.0, 0.0};
+            }
+
+            rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
         }
     }
 }
@@ -457,9 +487,14 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     std::array<double, 7> panda_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
     std::array<double, 3> normalized_falcon = {0.0, 0.0, 0.0};
     
-    // These convert the falcon to match the respective directions on the Kinova!
-    normalized_falcon[0] = falconPos[2];
-    normalized_falcon[1] = falconPos[0];
+    // These convert the falcon to match the respective directions on the Falcon - behind robot!
+    //normalized_falcon[0] = falconPos[2];
+    //normalized_falcon[1] = falconPos[0];
+    //normalized_falcon[2] = falconPos[1];
+
+    // In front of robot
+    normalized_falcon[0] = -falconPos[2];
+    normalized_falcon[1] = -falconPos[0];
     normalized_falcon[2] = falconPos[1];
 
     // The first time the clutch is initiated, freeze the position of the falcon
@@ -554,6 +589,7 @@ void actualPose(geometry_msgs::Pose pose) {
 
 int main(int argc, char **argv) {    
     ros::init(argc, argv, "Falcon");
+    tf2_ros::TransformListener tfListener(tfBuffer);
 
     string filename="";
     if(argc>1){
@@ -575,8 +611,6 @@ int main(int argc, char **argv) {
     ros::Publisher hybrid_pub = 
         n.advertise<panda_ros_msgs::HybridPose>("/panda/hybrid_pose", 1); 
     
-    tf2_ros::Buffer tfBuffer;
-    tf2_ros::TransformListener tfListener(tfBuffer);
 
 
     if (!init_input()) {
@@ -657,7 +691,6 @@ int main(int argc, char **argv) {
                 quit = true;
                 } 
             }
-
 
 
         // Store previous buttons
