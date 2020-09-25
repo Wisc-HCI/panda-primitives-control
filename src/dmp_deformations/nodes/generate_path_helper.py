@@ -269,9 +269,12 @@ def layup2():
         csvfile.write('\n')
         homing_point = np.array([0.6, -0.3, 0.20])
         homing_point_2 = np.array([0.52, 0.1, 0.20])
-        force = -5.0
+        force = -8.0
 
-        for ii in np.arange(0.95, 0.004, -0.1):
+
+        # two passes are intentionally off
+        passes = [0.95,0.85,0.75,0.65, 0.58, 0.42, 0.35, 0.25, 0.15, 0.05]
+        for ii in passes:
             print("ii", ii)
             # START OF PASS
             surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(ii, 0.98)
@@ -282,7 +285,7 @@ def layup2():
             starting_y = np.cross(normal_start, starting_vel)
             qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-            above_surf = surface_start + 0.03 * normal_start
+            above_surf = surface_start + 0.015 * normal_start
 
             printPathSection(csvfile, np.array(
                 [homing_point[0], homing_point[1], homing_point[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0,
@@ -395,13 +398,13 @@ def fastenerInsertion():
 
         csvfile.write(",,,,,fastener1,,,,,,,fastener1,,,,,,,fastener1,")
         csvfile.write('\n')
-        csvfile.write("release,,grasp,,,peginhole,,release,,grasp,,,peginhole,,release,,grasp,,,peginhole,,") # preaction/conditional logic fxn
+        csvfile.write("release,,grasp,,,peginhole,,,,grasp,,,peginhole,,,,grasp,,,peginhole,,") # preaction/conditional logic fxn
         csvfile.write('\n')
         csvfile.write("0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000")
         csvfile.write('\n')
         csvfile.write("1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1")
         csvfile.write('\n')
-        csvfile.write("2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2,2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2,2 2 2,2 2 2,2 2 2,2 2 2,0.5 0.5 0.5,3 30 150,2 2 2")
+        csvfile.write("2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2")
         csvfile.write('\n')
         csvfile.write("0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1")
         csvfile.write('\n')
@@ -412,25 +415,20 @@ def fastenerInsertion():
                       [0.01846655, -0.01132793, 0.9997653]])
 
 
-        t_addtl = np.matmul(R, np.array([0.025,0.0, 0.0]).reshape((3, 1))).reshape((3,))
-
-        holder_location = np.array([0.52434668, 0.21501005, 0.02388816])
-
         holder_locations = []
-        holder_locations.append(holder_location+t_addtl)
-        holder_locations.append(holder_location)
-        holder_locations.append(holder_location-t_addtl)
-
-        cowling_location = np.array([ 0.5085376 , -0.06548236,  0.14053339])
+        holder_locations.append(np.array([0.5038, 0.2647, 0.08546]))
+        holder_locations.append(np.array([0.52965, 0.26851, 0.08414]))
+        holder_locations.append(np.array([0.5529, 0.26907, 0.083148]))
 
         cowling_locations = []
-        cowling_locations.append((0.75,0.5))
-        cowling_locations.append((0.38,0.5))
+        cowling_locations.append((0.73,0.5))
+        cowling_locations.append((0.36,0.5))
         cowling_locations.append((0.15,0.5))
 
         for ii in range(0,3):
 
             holder_location = holder_locations[ii]
+            above_holder_location = holder_location + np.matmul(np.transpose(R),np.array([0.0, 0.0, 0.3]).reshape(3,1)).reshape((3,))
 
             # Hybrid
             surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(cowling_locations[ii][0],cowling_locations[ii][1])
@@ -443,6 +441,8 @@ def fastenerInsertion():
             print("NORMAL:",normal_start)
 
             print("AS:",above_surf)
+            print("H",holder_location)
+            print("AH:",above_holder_location)
             print("SS:",surface_start)
 
             homing_point = np.array([0.45, 0.0, 0.3])
@@ -461,18 +461,18 @@ def fastenerInsertion():
                 [holder_location[0], holder_location[1], holder_location[2]+0.13, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
                  0.0]),
                              np.array(
-                                 [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                                 [holder_location[0], holder_location[1], holder_location[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
                                   0.0, 0.0, 0.0]), num_pts)
 
             printPathSection(csvfile, np.array(
-                [holder_location[0], holder_location[1], holder_location[2]+0.055, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                [holder_location[0], holder_location[1], holder_location[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
                  0.0]),
                              np.array(
-                                 [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
+                                 [above_holder_location[0], above_holder_location[1], above_holder_location[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force,
                                   0.0, 0.0, 0.0]), num_pts)
 
             printPathSection(csvfile, np.array(
-                [holder_location[0], holder_location[1], holder_location[2]+0.3, q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
+                [above_holder_location[0], above_holder_location[1], above_holder_location[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
                  0.0]),
                              np.array(
                                  [above_surf[0], above_surf[1], above_surf[2]+0.05, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
@@ -496,7 +496,7 @@ def fastenerInsertion():
 
 
 def main():
-    fastenerInsertion()
+    layup2()
 
 if __name__ == "__main__":
     main()

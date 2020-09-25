@@ -1147,6 +1147,9 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         catch(tf2::TransformException &ex){
             cout << "Can't get TF2" << endl << ex.what() << endl;
         }
+
+
+
         double starting_z = 0.2002; // MH: hardcoded for task
         cout << "starting z:" << starting_z << endl;
 
@@ -1176,8 +1179,75 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 catch(tf2::TransformException &ex){
                     cout << "Can't get TF2" << endl << ex.what() << endl;
                 }
+
+                array<double,3> x_temp = {0.99978826,0.00928849,-0.01836173};
+                array<double,3> y_temp = {-0.00907831,0.9998927,0.01149706};
+                array<double,3> z_temp = {0.01846655,-0.01132793,0.9997653};
+                array<double,4> q_out;
+
+                rotationToQuaternion(x_temp,y_temp,z_temp,q_out);
+                array<double,3> surface_pos = vectorIntoConstraintFrame(actual_pos[0], actual_pos[1], actual_pos[2], q_out[0], q_out[1], q_out[2], q_out[3]);
+                
+                cout << "point:" << surface_pos[2] << endl;
                 //cout << "DIFF:" << abs(starting_z-actual_pos[2]) << endl;
-                if(abs(starting_z-actual_pos[2])>0.008){
+
+
+                if((s+1)>dmps[ii].size()){
+                    // Failed to find the hole
+                    // Release the gripper
+                    std_msgs::String actionstrtemp;
+                    actionstrtemp.data = "release";
+                    event_pub.publish(actionstrtemp);
+
+                    // Now go up
+                    // current position from TF2
+                    ros::spinOnce();
+                    try{
+                        geometry_msgs::TransformStamped transformStamped;
+                        transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                        actual_pos[0] = transformStamped.transform.translation.x;
+                        actual_pos[1] = transformStamped.transform.translation.y;
+                        actual_pos[2] = transformStamped.transform.translation.z;
+                        actual_orientation[0] = transformStamped.transform.rotation.x;
+                        actual_orientation[1] = transformStamped.transform.rotation.y;
+                        actual_orientation[2] = transformStamped.transform.rotation.z;
+                        actual_orientation[3] = transformStamped.transform.rotation.w;
+                    }
+
+                    catch(tf2::TransformException &ex){
+                        cout << "Can't get TF2" << endl << ex.what() << endl;
+                    }
+
+
+                    double xs = actual_pos[0];
+                    double ys = actual_pos[1];
+                    double zs = actual_pos[2];
+
+                    // set up position control for interpolation
+                    constraint_frame.x = 0.0; constraint_frame.y = 0.0; constraint_frame.z = 0.0; constraint_frame.w = 1.0;
+                    hybridPose.pose.orientation.x = actual_orientation[0]; hybridPose.pose.orientation.y = actual_orientation[1]; hybridPose.pose.orientation.z = actual_orientation[2]; hybridPose.pose.orientation.w = actual_orientation[3];
+                    hybridPose.wrench.force.x = 0.0; hybridPose.wrench.force.y = 0.0; hybridPose.wrench.force.z = 0.0;
+                    hybridPose.constraint_frame = constraint_frame;
+                    hybridPose.sel_vector = {1, 1, 1, 1, 1, 1};
+
+                    array<double,4> starting_orientation = {starting_points[0][3], starting_points[0][4], starting_points[0][5], starting_points[0][6]};
+
+                    // Interpolate over the course of 2 seconds to starting position
+                    for(int jj=0; jj<2000; jj++)
+                    {
+                        ros::spinOnce();
+                        hybridPose.pose.position.x = xs;
+                        hybridPose.pose.position.y = ys;
+                        hybridPose.pose.position.z = zs+(0.37-zs)*((jj*1.0)/2000.0);
+
+                        hybrid_pub.publish(hybridPose);
+                        usleep(1000);
+                    }
+                    
+                    break;
+                }
+
+                else if(abs(starting_z-actual_pos[2])>0.008){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
