@@ -1096,7 +1096,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 std_msgs::String actionstr;
                 actionstr.data = preactions[ii];
                 event_pub.publish(actionstr);
-                usleep(1000000);
+                usleep(2000000);
             }
 
             // todo: add conditional logic
@@ -1171,7 +1171,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
 
 
-        double starting_z = 0.196; // MH: hardcoded for task
+        double starting_z = 0.208; // MH: hardcoded for task
         cout << "starting z:" << starting_z << endl;
 
         array<double,2> prev_uv = {-1, -1};
@@ -1268,7 +1268,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     break;
                 }
 
-                else if((starting_z-surface_pos[2])>0.005){
+                else if((starting_z-surface_pos[2])>0.003){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;

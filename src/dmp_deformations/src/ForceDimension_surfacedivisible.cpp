@@ -43,7 +43,6 @@ array<double, 3> actual_pos;
 std::ofstream outputfile;
 
 tf2_ros::Buffer tfBuffer;
-tf2_ros::TransformListener tfListener(tfBuffer);
 
 
 /**
@@ -370,7 +369,7 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     std::array<double, 7> panda_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
     std::array<double, 3> normalized_falcon = {0.0, 0.0, 0.0};
     
-    // These convert the falcon to match the respective directions on the FD - behind robot!
+    // These convert the falcon to match the respective directions on the FD - behind of robot!
     //normalized_falcon[0] = fdPos[0];
     //normalized_falcon[1] = fdPos[1];
     //normalized_falcon[2] = fdPos[2];
@@ -383,9 +382,9 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     // The first time the clutch is initiated, freeze the position of the falcon
     if (*freeze)
     {
-        frozen_position[0] = fdPos[0];
-        frozen_position[1] = fdPos[1];
-        frozen_position[2] = fdPos[2];
+        frozen_position[0] = normalized_falcon[0];
+        frozen_position[1] = normalized_falcon[1];
+        frozen_position[2] = normalized_falcon[2];
         *freeze = false;
     }
 
@@ -404,16 +403,16 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
         // based on the movement during the clutching action
         if(*reset_center)
         {
-            offsets[0] = offsets[0]-scaling_factors[0]*(fdPos[0]-frozen_position[0]);
-            offsets[1] = offsets[1]-scaling_factors[1]*(fdPos[1]-frozen_position[1]);
-            offsets[2] = offsets[2]-scaling_factors[2]*(fdPos[2]-frozen_position[2]);
+            offsets[0] = offsets[0]-scaling_factors[0]*(normalized_falcon[0]-frozen_position[0]);
+            offsets[1] = offsets[1]-scaling_factors[1]*(normalized_falcon[1]-frozen_position[1]);
+            offsets[2] = offsets[2]-scaling_factors[2]*(normalized_falcon[2]-frozen_position[2]);
             *reset_center = false;
         }
 
         // When not clutching, command based on the actual falcon position
-        panda_pos[0] = scaling_factors[0] * fdPos[0] + offsets[0];
-        panda_pos[1] = scaling_factors[1] * fdPos[1] + offsets[1];
-        panda_pos[2] = scaling_factors[2] * fdPos[2] + offsets[2];
+        panda_pos[0] = scaling_factors[0] * normalized_falcon[0] + offsets[0];
+        panda_pos[1] = scaling_factors[1] * normalized_falcon[1] + offsets[1];
+        panda_pos[2] = scaling_factors[2] * normalized_falcon[2] + offsets[2];
         panda_pos[6] = 1;
     }
 
@@ -445,7 +444,7 @@ double old_force_z = 0.0;
 void feedbackInput(geometry_msgs::Wrench wrench) {
     double scale = 0.8; // force reflection
     double stiffness = 200; // for replay
-    double viscous = 100; // friction
+    double viscous = 75; // friction
 
     // Filter forces
     double alpha = 0.9;
@@ -461,8 +460,15 @@ void feedbackInput(geometry_msgs::Wrench wrench) {
     array<double, 3> forceDimensionVel = {0,0,0};
     dhdGetLinearVelocity(&forceDimensionVel[0],&forceDimensionVel[1],&forceDimensionVel[2]);
     // Send force (bilateral + friction) to the falcon
-    dhdSetForceAndTorque(-fx_interp * scale-viscous*forceDimensionVel[0], 
-            -fy_interp * scale-viscous*forceDimensionVel[1], 
+
+    // behind robot
+    // dhdSetForceAndTorque(-fx_interp * scale-viscous*forceDimensionVel[0], 
+    //         -fy_interp * scale-viscous*forceDimensionVel[1], 
+    //         fz_interp * scale-viscous*forceDimensionVel[2],0.0,0.0,0.0);
+
+    // in front of robot
+     dhdSetForceAndTorque(fx_interp * scale-viscous*forceDimensionVel[0], 
+            fy_interp * scale-viscous*forceDimensionVel[1], 
             fz_interp * scale-viscous*forceDimensionVel[2],0.0,0.0,0.0);
 }
 
@@ -475,6 +481,8 @@ int main(int argc, char **argv) {
 
     // All of the required ros topics
     ros::init(argc, argv, "ForceDimensionDMP");
+
+    tf2_ros::TransformListener tfListener(tfBuffer);
 
     string filename="";
     if(argc>1){
