@@ -274,7 +274,7 @@ def layup2():
 
         # two passes are intentionally off
         passes_start = [0.95,0.85,0.75,0.65, 0.58, 0.42, 0.35, 0.28, 0.12, 0.05]
-        passes_end = [0.95,0.85,0.75,0.65, 0.55, 0.45, 0.35, 0.25, 0.15, 0.05]
+        passes_end = [0.95,0.85,0.75,0.65, 0.57, 0.43, 0.35, 0.27, 0.13, 0.05]
         for ii,jj in zip(passes_start,passes_end):
             print("ii", ii)
             # START OF PASS
@@ -286,7 +286,7 @@ def layup2():
             starting_y = np.cross(normal_start, starting_vel)
             qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-            above_surf = surface_start + 0.010 * normal_start
+            above_surf = surface_start + 0.013 * normal_start
 
             printPathSection(csvfile, np.array(
                 [homing_point[0], homing_point[1], homing_point[2], qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0,
@@ -335,23 +335,24 @@ def cowling4():
         surfaceModel = PyBSpline.BSplineSurface()
         surfaceModel.loadSurface("cowling4")
 
-        csvfile.write(",cowling4,,")
+        csvfile.write(",cowling4,cowling4,cowling4,,")
         csvfile.write('\n')
-        csvfile.write(",,,") #preaction
+        csvfile.write(",,,,,") #preaction
         csvfile.write('\n')
-        csvfile.write("0,100,200")
+        csvfile.write("0,100,200,300,400")
         csvfile.write('\n')
-        csvfile.write("1,0,1")
+        csvfile.write("1,0,0,0,1")
         csvfile.write('\n')
-        csvfile.write("2 2 2,5 5 500,2 2 2")
+        csvfile.write("2 2 2,5 5 500,5 5 500,5 5 500,2 2 2")
+        csvfile.write('\n')
+        csvfile.write("0.1,0.1,0.1,0.1,0.1")
         csvfile.write('\n')
 
         homing_point = np.array([0.45, -0.3, 0.20])
         q_straight = np.array([0.7071068, 0.0, 0.0, 0.7071068])
-        force = -10.0
-
+        force = -5
         # START OF PASS
-        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.2,0.2)
+        surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.2,0.1)
 
         starting_vel = r_u * 0.0 + r_v * 1.0
         starting_vel = starting_vel / np.linalg.norm(starting_vel)
@@ -368,10 +369,18 @@ def cowling4():
                               0.0, 0.0, 0.0]), num_pts)
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-        printCircularSection(csvfile, np.array([0.2, 0.2, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                         np.array([0.2, 0.8, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.035,-50)
+        printCircularSection(csvfile, np.array([0.2, 0.1, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+                         np.array([0.2, 0.3, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.04,-20)
+        # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
+        printCircularSection(csvfile, np.array([0.2, 0.3, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+                             np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,
+                             0.04, -20)
+        # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
+        printCircularSection(csvfile, np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+                             np.array([0.2, 0.9, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,
+                             0.04, -20)
 
-        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.8)
+        surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.9)
         ending_vel = r_u * 0.0 + r_v * 1.0
         ending_vel = ending_vel / np.linalg.norm(ending_vel)
         ending_y = np.cross(normal_end, ending_vel)
@@ -417,13 +426,13 @@ def fastenerInsertion():
 
 
         holder_locations = []
-        holder_locations.append(np.array([0.5038+0.0065, 0.2647, 0.08546+0.008]))
-        holder_locations.append(np.array([0.52965+0.0065, 0.26851, 0.08414+0.008]))
-        holder_locations.append(np.array([0.5529+0.0065, 0.26907, 0.083148+0.008]))
+        holder_locations.append(np.array([0.5038+0.0015, 0.2647, 0.08546+0.008]))
+        holder_locations.append(np.array([0.52965+0.0015, 0.26851, 0.08414+0.008]))
+        holder_locations.append(np.array([0.5529+0.0015, 0.26907, 0.083148+0.008]))
 
         cowling_locations = []
         cowling_locations.append((0.94,0.5))
-        cowling_locations.append((0.55,0.5))
+        cowling_locations.append((0.53,0.5))
         cowling_locations.append((0.16,0.5))
 
         for ii in range(0,3):
@@ -437,7 +446,7 @@ def fastenerInsertion():
             starting_vel = starting_vel / np.linalg.norm(starting_vel)
             starting_y = np.cross(normal_start, starting_vel)
             qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
-            above_surf = surface_start + 0.073*normal_start
+            above_surf = surface_start + 0.077*normal_start
 
             print("NORMAL:",normal_start)
 
@@ -497,7 +506,7 @@ def fastenerInsertion():
 
 
 def main():
-    layup2()
+    cowling4()
 
 if __name__ == "__main__":
     main()

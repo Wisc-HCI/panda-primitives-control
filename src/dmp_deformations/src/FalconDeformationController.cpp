@@ -235,9 +235,9 @@ void FalconDeformationController::run_zero_displacement_controller(){
         usleep(1000);
 
         geometry_msgs::Vector3 fd_input;
-        fd_input.x = falconPos[0]-0.125;
-        fd_input.y = falconPos[1]-0.0;
-        fd_input.z = falconPos[2]-0.0;
+        fd_input.x = falconPos[2]-0.125;
+        fd_input.y = falconPos[0]-0.0;
+        fd_input.z = falconPos[1]-0.0;
         fd_publisher.publish(fd_input);
     }
 }

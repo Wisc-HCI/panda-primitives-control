@@ -85,6 +85,8 @@ class DeformationController{
         bool var_x_changing,var_y_changing,var_z_changing;
         string trajectoryFile;
 
+        ros::Publisher fd_publisher;
+
         DeformationController();
         DeformationController(string file);
 
@@ -1178,6 +1180,11 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
         constraint_frame.x=0.0; constraint_frame.y=0.0; constraint_frame.z=0.0; constraint_frame.w=1.0;
 
+        double qx_old = starting_orientation[0];
+        double qy_old = starting_orientation[1];
+        double qz_old = starting_orientation[2];
+        double qw_old = starting_orientation[3];
+
         // Now replay the entirety of the demonstration
         while(s<dmps[ii].size()){
 
@@ -1515,6 +1522,21 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
 
+            // Filter the calculated orientation
+            array<double,4> q_prev = {qx_old,qy_old,qz_old,qw_old};
+            array<double,4> q_new = {qx,qy,qz,qw};
+            array<double,4> q_filt;
+            
+            q_filt = slerp(q_prev, q_new,0.05);
+
+            qw_old = qw;
+            qx_old = qx;
+            qy_old = qy;
+            qz_old = qz;
+
+            //qx = q_filt[0]; qy = q_filt[1]; qz = q_filt[2]; qw = q_filt[3];
+
+
             // Sign correction issues for transitioning between forwards and backwards DMPs
             // The sign correction is used between when the value of 's' changes value
             // and when the velocity has actually flipped to the opposite
@@ -1826,7 +1848,10 @@ int DeformationController::run_deformation_controller(int argc, char **argv){
         n.advertise<std_msgs::String>("/panda/commands", 5);
     ros::Subscriber force_sub = n.subscribe("/panda/control_wrench", 10, &DeformationController::readPandaForces, this);
     
-    tf2_ros::TransformListener tfListener(tfBuffer); 
+    tf2_ros::TransformListener tfListener(tfBuffer);
+
+    fd_publisher = 
+        n.advertise<geometry_msgs::Vector3>("/fd/input", 5);
 
     ros::Publisher file_pub = 
         n.advertise<std_msgs::String>("/dmp/filepub", 5);
