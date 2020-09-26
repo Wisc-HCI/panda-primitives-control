@@ -233,6 +233,12 @@ void FalconDeformationController::run_zero_displacement_controller(){
         dmp_fy = (falconPos[0])/(0.06);
         dmp_fz = falconPos[1]/(0.055);
         usleep(1000);
+
+        geometry_msgs::Vector3 fd_input;
+        fd_input.x = falconPos[0]-0.125;
+        fd_input.y = falconPos[1]-0.0;
+        fd_input.z = falconPos[2]-0.0;
+        fd_publisher.publish(fd_input);
     }
 }
 

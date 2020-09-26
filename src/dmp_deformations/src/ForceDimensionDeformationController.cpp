@@ -135,6 +135,12 @@ void ForceDimensionDeformationController::run_zero_displacement_controller(){
         dmp_fy = (forceDimensionPos[1]-y_d)/(0.12);
         dmp_fz = (forceDimensionPos[2]-z_d)/(0.105);
 
+        geometry_msgs::Vector3 fd_input;
+        fd_input.x = forceDimensionPos[0]-x_d;
+        fd_input.y = forceDimensionPos[1]-y_d;
+        fd_input.z = forceDimensionPos[2]-z_d;
+        fd_publisher.publish(fd_input);
+
 
         usleep(1000);
     }
