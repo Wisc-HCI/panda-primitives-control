@@ -49,10 +49,6 @@ namespace PandaController {
         boost::lock_guard<boost::mutex> guard(mutex);
         Eigen::Quaterniond orientation = getFTOrientation();
 
-
-        cout << "FORCEOG:" << ft_sensor[0] << " " << ft_sensor[1] << " " << ft_sensor[2] << endl;
-        cout << "ORIENTATION:" << orientation.coeffs()[0] << " " << orientation.coeffs()[1] << " " << orientation.coeffs()[2] << " " << orientation.coeffs()[3] << " " << endl;
-        
         // forces and torques are in the local frame according to the FT
         // transform -> turn into global
         Eigen::Vector3d forces_local;
@@ -63,7 +59,6 @@ namespace PandaController {
         Eigen::Vector3d torques_global = orientation*torques_local;
 
         orientation = getEEOrientation();
-        cout << "ORIENTATION2:" << orientation.coeffs()[0] << " " << orientation.coeffs()[1] << " " << orientation.coeffs()[2] << " " << orientation.coeffs()[3] << " " << endl;
 
         // i.e., bias is in the global frame (e.g., weight)
         array<double,6> biased_FT;
