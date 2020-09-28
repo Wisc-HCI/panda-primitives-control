@@ -24,8 +24,8 @@ def main():
     hpose.pose.position.z = 0.24986
     hpose.pose.orientation.x = 0
     hpose.pose.orientation.y = 0.0
-    hpose.pose.orientation.z = 0.0
-    hpose.pose.orientation.w = 1.0
+    hpose.pose.orientation.z = 0.7071
+    hpose.pose.orientation.w = 0.7071
     hpose.sel_vector = [1,1,1,1,1,1]
     hpose.wrench.force.x = 0.0
     hpose.wrench.force.y = 0.0
