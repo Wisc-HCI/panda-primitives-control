@@ -729,7 +729,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
     bool proper_contact = false;
     bool previous_sample_force = false;
     int num_good_samples = 0;
-    int reqd_good_samples = 50;
+    int reqd_good_samples = 100;
     while(!proper_contact)
     {
         //proper_contact=true; // TODO: REMOVE/FIX THIS
@@ -737,7 +737,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
         // reaction force so flip sign
         // MH use absolute value for easier computation - should be overdamped
         //if(f_z_rotated>-0.95*starting_points[ii][2] && f_z_rotated<-1.05*starting_points[ii][2])
-        if(abs(fz)>0.30*abs(starting_points[ii][2]))
+        if(abs(fz)>0.50*abs(starting_points[ii][2]))
         {
             num_good_samples++;
         }
@@ -745,7 +745,7 @@ void DeformationController::forceOnloading(int ii, geometry_msgs::Vector3 select
             num_good_samples = 0;
         }
 
-        if(num_good_samples>50){
+        if(num_good_samples>reqd_good_samples){
             proper_contact=true;
         }
         

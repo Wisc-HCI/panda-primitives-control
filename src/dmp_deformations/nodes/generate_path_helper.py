@@ -345,12 +345,12 @@ def cowling4():
         csvfile.write('\n')
         csvfile.write("2 2 2,5 5 500,5 5 500,5 5 500,2 2 2")
         csvfile.write('\n')
-        csvfile.write("0.15,0.15,0.15,0.15,0.15")
+        csvfile.write("0.20,0.25,0.25,0.25,0.20")
         csvfile.write('\n')
 
-        homing_point = np.array([0.45, -0.3, 0.20])
+        homing_point = np.array([0.45, -0.1, 0.20])
         q_straight = np.array([0.7071068, 0.0, 0.0, 0.7071068])
-        force = -5.0
+        force = -4.0
         # START OF PASS
         surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.2,0.1)
 
@@ -359,7 +359,7 @@ def cowling4():
         starting_y = np.cross(normal_start, starting_vel)
         qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-        above_surf = surface_start + 0.03 * normal_start
+        above_surf = surface_start + 0.010 * normal_start
 
         printPathSection(csvfile, np.array(
             [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
@@ -510,7 +510,7 @@ def fastenerInsertion():
 
 
 def main():
-    fastenerInsertion()
+    layup2()
 
 if __name__ == "__main__":
     main()
