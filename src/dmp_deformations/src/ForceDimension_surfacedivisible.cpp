@@ -442,12 +442,12 @@ double old_force_z = 0.0;
 
 
 void feedbackInput(geometry_msgs::Wrench wrench) {
-    double scale = 0.8; // force reflection
+    double scale = 0.3; // force reflection
     double stiffness = 200; // for replay
-    double viscous = 75; // friction
+    double viscous = 100; // friction
 
     // Filter forces
-    double alpha = 0.9;
+    double alpha = 0.99;
     double fx_interp = alpha*wrench.force.x + (1-alpha)*old_force_x;
     double fy_interp = alpha*wrench.force.y + (1-alpha)*old_force_y;
     double fz_interp = alpha*wrench.force.z + (1-alpha)*old_force_z;
