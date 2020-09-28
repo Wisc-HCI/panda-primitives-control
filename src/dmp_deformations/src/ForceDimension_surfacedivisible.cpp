@@ -291,13 +291,7 @@ void vfSurface(ros::NodeHandle n, string filename){
 
             array<double,3> static_dir;
             array<double,3> n_hat = {0.0, 0.0, 1.0};
-            if(pos[1]<0.1){
-                static_dir = {0.0, 1.0, 0.0};
-            }
-
-            else{
-                static_dir = {1.0, 0.0, 0.0};
-            }
+            static_dir = {0.0, 1.0, 0.0};
 
             rotationToQuaternion(static_dir,crossProduct(n_hat, static_dir), n_hat, q_normal);
             usleep(10000);
