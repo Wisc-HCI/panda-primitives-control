@@ -410,7 +410,6 @@ void publishWrenchLocal(franka::RobotState robot_state){
     wrench.torque.y = torques_local[1];
     wrench.torque.z = torques_local[2];
 
-    g_wrenchPub.publish(wrench);
     wrench.force.x = -forces_local[0];
     wrench.force.y = -forces_local[1];
     wrench.force.z = -forces_local[2];

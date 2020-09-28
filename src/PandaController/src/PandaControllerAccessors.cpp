@@ -97,7 +97,7 @@ namespace PandaController {
         // TODO: remove 30 degrees and put it here!!
         Eigen::Matrix4d pandaFTLink = (
             Eigen::Matrix4d() << 
-                  0.7071, -0.7071,  0,       0.0 
+                  0.7071, -0.7071,  0,       0.0, 
                  -0.7071, -0.7071,  0,       0.0, 
                   0,       0,      -1,   0.06534, 
                   0,     0,     0,           1
@@ -139,6 +139,8 @@ namespace PandaController {
                 return pandaMocapEELink;
             case EELink::CameraLink:
                 return cameraLink;
+            case EELink::PandaFT:
+                return pandaFTLink;
             default:
                 return pandaGripperEELink;
         }
@@ -307,7 +309,8 @@ namespace PandaController {
     Eigen::Quaterniond getFTOrientation() {
         // This computes the orientation for the given configuration of the force torque sensor
         // using a static link and chain choice
-        Eigen::Affine3d transform(EEFromDHA(current_state.q, PandaFlangeDHA,pandaFTLink));
+        boost::lock_guard<boost::mutex> guard(mutex);
+        Eigen::Affine3d transform(EEFromDHA(current_state.q, ee_chain,pandaFTLink));
         return Eigen::Quaterniond(transform.linear()).normalized();
     }
     
