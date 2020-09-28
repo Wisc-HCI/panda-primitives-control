@@ -1279,6 +1279,8 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
                     cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
+                    char d=(char)(7);
+                    system("(speaker-test -t sine -f 1000)& pid=$!; sleep 0.2s; kill -9 $pid");
                     // This loop monitors the robot which has started moving in the
                     // force direction until it achieves the desired force (within a tolerance)
                     bool proper_contact = false;
@@ -1372,7 +1374,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             double var_z = variance_dmp[ii][(int)floor(s)][2]+(variance_dmp[ii][(int)ceil(s)][2]-variance_dmp[ii][(int)floor(s)][2])*(s-floor(s));
 
             // If the variance starts changing (up or down), signal a haptic cue to the user
-            check_for_haptic_cue(var_x,var_y,var_z);
+            //check_for_haptic_cue(var_x,var_y,var_z);
             double x_conv, y_conv, z_conv;
             
             ////////////////////////////////////////////////////////////////
