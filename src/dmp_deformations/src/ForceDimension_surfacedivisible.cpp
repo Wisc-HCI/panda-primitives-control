@@ -436,9 +436,9 @@ double old_force_z = 0.0;
 
 
 void feedbackInput(geometry_msgs::Wrench wrench) {
-    double scale = 0.3; // force reflection
+    double scale = 0.6; // force reflection
     double stiffness = 200; // for replay
-    double viscous = 100; // friction
+    double viscous = 50; // friction
 
     // Filter forces
     double alpha = 0.99;
