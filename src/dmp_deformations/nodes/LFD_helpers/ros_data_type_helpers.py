@@ -58,6 +58,22 @@ def np_array_to_pose_array(t_array,q_array):
         poses.append(pos)
     return poses
 
+def fd_to_np_array(ros_Vector3_array):
+    """
+        TODO function documentation
+
+        :param bfr: bagfile with demonstration data
+        :param cutoff: break frequency of filter
+        :type bfr: bagfile object
+        :type cutoff: float
+        :returns: outstruct
+        :rtype: struct with pose, and FT data
+        """
+
+    __doc__ = "Change a ros Vector3 list to a numpy nx3 array"
+    # return np.array([[f.vector.x,f.vector.y,f.vector.z] for f in ros_Vector3_array])
+    force_array = np.array([[f.x, f.y, f.z] for f in ros_Vector3_array])
+    return force_array
 
 def vec3_to_np_array(ros_Vector3_array):
     """

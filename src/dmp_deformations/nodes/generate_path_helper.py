@@ -265,20 +265,20 @@ def layup2():
         csvfile.write(
             "2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2,2 2 2,2 2 2,10 10 150,2 2 2")
         csvfile.write('\n')
-        csvfile.write("0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.3,0.3,0.3,0.12,0.2,0.1")
+        csvfile.write("0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.3,0.3,0.3,0.16,0.2,0.1")
         csvfile.write('\n')
         homing_point = np.array([0.6, -0.3, 0.20])
         homing_point_2 = np.array([0.52, 0.1, 0.20])
         force = -8.0
 
 
-        # two passes are intentionally off
-        passes_start = [0.95,0.85,0.75,0.65, 0.60, 0.40, 0.35, 0.28, 0.12, 0.05]
+        # one pass is intentionally off
+        passes_start = [0.95,0.85,0.75,0.65, 0.58, 0.42, 0.35, 0.28, 0.12, 0.05]
         passes_end = [0.95,0.85,0.75,0.65, 0.55, 0.45, 0.35, 0.27, 0.13, 0.05]
         for ii,jj in zip(passes_start,passes_end):
             print("ii", ii)
             # START OF PASS
-            surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(ii, 0.96)
+            surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(ii, 0.94)
             print('SS:', surface_start)
 
             starting_vel = r_u * 0.0 + r_v * -1.0
@@ -296,7 +296,7 @@ def layup2():
                                   0.0, 0.0, 0.0]), num_pts)
 
             # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-            printPathSection(csvfile, np.array([ii, 0.96, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+            printPathSection(csvfile, np.array([ii, 0.94, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
                              np.array([jj, 0.02, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts)
 
             surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(jj, 0.02)
@@ -341,16 +341,16 @@ def cowling4():
         csvfile.write('\n')
         csvfile.write("0,100,200,300,400")
         csvfile.write('\n')
-        csvfile.write("1,0,0,0,1")
+        csvfile.write("1,0,0,1")
         csvfile.write('\n')
-        csvfile.write("2 2 2,5 5 500,5 5 500,5 5 500,2 2 2")
+        csvfile.write("2 2 2,5 5 500,5 5 500,2 2 2")
         csvfile.write('\n')
-        csvfile.write("0.20,0.25,0.25,0.25,0.20")
+        csvfile.write("0.20,0.25,0.25,0.20")
         csvfile.write('\n')
 
         homing_point = np.array([0.45, -0.1, 0.20])
         q_straight = np.array([0.7071068, 0.0, 0.0, 0.7071068])
-        force = -4.0
+        force = -1.0
         # START OF PASS
         surface_start, normal_start, r_u, r_v = surfaceModel.calculate_surface_point(0.2,0.1)
 
@@ -359,7 +359,7 @@ def cowling4():
         starting_y = np.cross(normal_start, starting_vel)
         qx_s, qy_s, qz_s, qw_s = calculateQuaternion(normal_start, starting_vel, starting_y)
 
-        above_surf = surface_start + 0.010 * normal_start
+        above_surf = surface_start + 0.00 * normal_start
 
         printPathSection(csvfile, np.array(
             [homing_point[0], homing_point[1], homing_point[2], q_straight[0], q_straight[1], q_straight[2], q_straight[3], 0.0, 0.0, force, 0.0, 0.0,
@@ -370,15 +370,12 @@ def cowling4():
 
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
         printCircularSection(csvfile, np.array([0.2, 0.1, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                         np.array([0.2, 0.3, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.04,-20)
+                         np.array([0.2, 0.5, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,0.08,-20)
+
         # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-        printCircularSection(csvfile, np.array([0.2, 0.3, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
-                             np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,
-                             0.04, -20)
-        # Format for path section is [ru,rv,null, qx, qy, qz, qw, fx, fy, fz, tx, ty, tz]
-        printCircularSection(csvfile, np.array([0.2, 0.6, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
+        printCircularSection(csvfile, np.array([0.2, 0.5, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),
                              np.array([0.2, 0.9, 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]), num_pts,
-                             0.04, -20)
+                             0.08, -20)
 
         surface_end, normal_end, r_u, r_v = surfaceModel.calculate_surface_point(0.2, 0.9)
         ending_vel = r_u * 0.0 + r_v * 1.0
@@ -406,17 +403,18 @@ def fastenerInsertion():
         surfaceModel = PyBSpline.BSplineSurface()
         surfaceModel.loadSurface("fastener1")
 
-        csvfile.write(",,,,,fastener1,,,,,,,fastener1,,,,,,,fastener1,")
+        csvfile.write(",,,,fastener1,fastener1,,,,,,fastener1,fastener1,,,,,,fastener1,fastener1,")
         csvfile.write('\n')
-        csvfile.write("release,,grasp,,,peginhole,,,,grasp,,,peginhole,,,,grasp,,,peginhole,,") # preaction/conditional logic fxn
+        csvfile.write("release,,grasp,,prepeginhole,peginhole,,,,grasp,,prepeginhole,peginhole,,,,grasp,,prepeginhole,peginhole,,") # preaction/conditional logic fxn
         csvfile.write('\n')
         csvfile.write("0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000")
         csvfile.write('\n')
-        csvfile.write("1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1")
+        csvfile.write("1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1")
         csvfile.write('\n')
-        csvfile.write("2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,0.5 0.5 0.5,3 100 150,2 2 2")
+        csvfile.write("2 2 2,0 0 0,2 2 2,2 2 2,6 100 150,6 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,6 100 150,6 100 150,2 2 2,2 2 2,0 0 0,2 2 2,2 2 2,6 100 150,6 100 150,2 2 2")
         csvfile.write('\n')
-        csvfile.write("0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1")
+        # csvfile.write("0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1,0.2,0.075,0.2,0.2,0.02,0.01,0.1")
+        csvfile.write("0.2,0.075,0.2,0.2,0.0008,0.01,0.1,0.2,0.075,0.2,0.2,0.0008,0.01,0.1,0.2,0.075,0.2,0.2,0.0008,0.01,0.1")
         csvfile.write('\n')
 
         # Apply a rotation and a translation to all of the points
@@ -489,14 +487,14 @@ def fastenerInsertion():
                 [above_holder_location[0], above_holder_location[1], above_holder_location[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
                  0.0]),
                              np.array(
-                                 [above_surf[0], above_surf[1], above_surf[2]+0.05, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
+                                 [above_surf[0], above_surf[1], above_surf[2]+0.03, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
                                   0.0, 0.0, 0.0]), num_pts)
 
             printPathSection(csvfile, np.array(
-                [above_surf[0], above_surf[1], above_surf[2]+0.05, q_straight[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
+                [cowling_locations[ii][0], cowling_locations[ii][1], 0.0, q_straight[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force, 0.0, 0.0,
                  0.0]),
                              np.array(
-                                 [above_surf[0], above_surf[1], above_surf[2], q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
+                                 [cowling_locations[ii][0]+0.01, cowling_locations[ii][1]+0.01, 0.0, q_sideways[0], q_sideways[1], q_sideways[2], q_sideways[3], 0.0, 0.0, force,
                                   0.0, 0.0, 0.0]), num_pts)
 
             printHoleSpiral(csvfile, np.array([cowling_locations[ii][0], cowling_locations[ii][1], 0.0, qx_s, qy_s, qz_s, qw_s, 0.0, 0.0, force, 0.0, 0.0, 0.0]),num_pts,0.015,0.2,15)

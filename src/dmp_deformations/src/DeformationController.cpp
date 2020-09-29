@@ -1094,11 +1094,11 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         {
             // publish to the event channel
             if(preactions[ii]=="grasp" || preactions[ii]=="release"){
-                usleep(1000000);
+                usleep(500000);
                 std_msgs::String actionstr;
                 actionstr.data = preactions[ii];
                 event_pub.publish(actionstr);
-                usleep(2000000);
+                usleep(1500000);
             }
 
             // todo: add conditional logic
@@ -1112,7 +1112,9 @@ void DeformationController::replay_demo(ros::NodeHandle n){
         if((selection.x==0 || selection.y==0 || selection.z==0)){
             if(previous_dmp_no_contact){
                 // If selection has force control and is transitioning from no-contact, need force onloading
-                forceOnloading(ii,selection,starting_points,attractor_points,dmps,curr_surface,surfaces[ii],selection_vector_pub,constraint_frame_pub,wrench_goal_pub,hybrid_pub,ddu,ddv);
+                if(surfaces[ii]!="fastener1"){ // no force onloading for fastener task
+                    forceOnloading(ii,selection,starting_points,attractor_points,dmps,curr_surface,surfaces[ii],selection_vector_pub,constraint_frame_pub,wrench_goal_pub,hybrid_pub,ddu,ddv);
+                }
             }
             previous_dmp_no_contact = false;
         }
@@ -1278,8 +1280,6 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 else if((starting_z-surface_pos[2])>0.003){
                     // similar to force onloading... go down until a force for a while
                     // then go up to a fixed height
-                    cout << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl << "WOOKA WOOKA" << endl;
-                    char d=(char)(7);
                     system("(speaker-test -t sine -f 1000)& pid=$!; sleep 0.2s; kill -9 $pid");
                     // This loop monitors the robot which has started moving in the
                     // force direction until it achieves the desired force (within a tolerance)
@@ -1363,6 +1363,41 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                         usleep(1000);
                     }
                     
+                    break;
+                }
+            }
+
+            else if(preactions[ii]=="prepeginhole"){
+                // current position from TF2
+                ros::spinOnce();
+                try{
+                    geometry_msgs::TransformStamped transformStamped;
+                    transformStamped = tfBuffer.lookupTransform("panda_link0", "panda_ee",ros::Time(0));
+                    actual_pos[0] = transformStamped.transform.translation.x;
+                    actual_pos[1] = transformStamped.transform.translation.y;
+                    actual_pos[2] = transformStamped.transform.translation.z;
+                    actual_orientation[0] = transformStamped.transform.rotation.x;
+                    actual_orientation[1] = transformStamped.transform.rotation.y;
+                    actual_orientation[2] = transformStamped.transform.rotation.z;
+                    actual_orientation[3] = transformStamped.transform.rotation.w;
+                }
+
+                catch(tf2::TransformException &ex){
+                    cout << "Can't get TF2" << endl << ex.what() << endl;
+                }
+
+                array<double,3> x_temp = {0.99978826,0.00928849,-0.01836173};
+                array<double,3> y_temp = {-0.00907831,0.9998927,0.01149706};
+                array<double,3> z_temp = {0.01846655,-0.01132793,0.9997653};
+                array<double,4> q_out;
+
+                rotationToQuaternion(x_temp,y_temp,z_temp,q_out);
+                array<double,3> surface_pos = vectorIntoConstraintFrame(actual_pos[0], actual_pos[1], actual_pos[2], q_out[0], q_out[1], q_out[2], q_out[3]);
+                
+                //cout << "point:" << surface_pos[2] << endl;
+                //cout << "DIFF:" << abs(starting_z-actual_pos[2]) << endl;
+
+                if((starting_z-surface_pos[2])>0.003){
                     break;
                 }
             }
