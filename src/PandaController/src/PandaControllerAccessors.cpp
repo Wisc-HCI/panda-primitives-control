@@ -6,8 +6,6 @@
 #include <array>
 #include <deque>
 #include "DHA.h"
-#include <franka/robot.h>
-#include <chrono>
 
 using namespace std;
 
@@ -18,8 +16,6 @@ namespace PandaController {
         boost::mutex trajectory_mutex;
         Trajectory trajectory = motionlessTrajectory();
         franka::RobotState current_state;
-        franka::JointPositions target_velocity{0,0,0,0,0,0,0};
-        auto velocity_ts = chrono::system_clock::from_time_t(0);
 
         array<double, 7> pose_goal{}; //<x, y, z, x, y, z, w>
 
@@ -101,7 +97,7 @@ namespace PandaController {
         // TODO: remove 30 degrees and put it here!!
         Eigen::Matrix4d pandaFTLink = (
             Eigen::Matrix4d() << 
-                  0.7071, -0.7071,  0,       0.0, 
+                  0.7071, -0.7071,  0,       0.0 
                  -0.7071, -0.7071,  0,       0.0, 
                   0,       0,      -1,   0.06534, 
                   0,     0,     0,           1
@@ -143,15 +139,12 @@ namespace PandaController {
                 return pandaMocapEELink;
             case EELink::CameraLink:
                 return cameraLink;
-            case EELink::PandaFT:
-                return pandaFTLink;
             default:
                 return pandaGripperEELink;
         }
     }
 
     void setKinematicChain(KinematicChain chain, EELink link) {
-        boost::lock_guard<boost::mutex> guard(mutex);
         ee_chain = getChain(chain);
         ee_link = getEELink(link);
     }
@@ -315,7 +308,7 @@ namespace PandaController {
         // This computes the orientation for the given configuration of the force torque sensor
         // using a static link and chain choice
         boost::lock_guard<boost::mutex> guard(mutex);
-        Eigen::Affine3d transform(EEFromDHA(current_state.q, ee_chain,pandaFTLink));
+        Eigen::Affine3d transform(EEFromDHA(current_state.q, PandaFlangeDHA,pandaFTLink));
         return Eigen::Quaterniond(transform.linear()).normalized();
     }
     
@@ -349,43 +342,5 @@ namespace PandaController {
     void writeMaxForce(double val) {
         boost::lock_guard<boost::mutex> guard(mutex);
         maxForce = val;
-    }
-
-    void getChainAndLink(vector<DHA> & chain, Eigen::Matrix4d & link) {
-        boost::lock_guard<boost::mutex> guard(mutex);
-        chain = ee_chain;
-        link = ee_link;
-    }
-
-    Eigen::VectorXd getNextJointAngles(const franka::RobotState & state, Eigen::Vector3d ee_pos, Eigen::VectorXd ee_angles) {
-        vector<DHA> chain;
-        Eigen::Matrix4d link;
-        getChainAndLink(chain, link);
-
-        return PandaController::getJointAngles(target_velocity.q, ee_chain, ee_link, ee_pos, ee_angles);
-    }
-
-
-    franka::JointPositions getTargetJointVelocity() {
-        boost::lock_guard<boost::mutex> guard(mutex);
-        // if (chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - velocity_ts).count() >= 10){
-        //     return {
-        //         current_state.q_d[0],
-        //         current_state.q_d[1],
-        //         current_state.q_d[2],
-        //         current_state.q_d[3],
-        //         current_state.q_d[4],
-        //         current_state.q_d[5],
-        //         current_state.q_d[6]
-        //     };
-        // }
-        
-        return target_velocity;
-    }
-
-    void setTargetJointVelocity(franka::JointPositions v) {
-        boost::lock_guard<boost::mutex> guard(mutex);
-        target_velocity = v;
-        velocity_ts = chrono::system_clock::now();
     }
 }
