@@ -140,8 +140,6 @@ void ForceDimensionDeformationController::run_zero_displacement_controller(){
         fd_input.y = forceDimensionPos[1]-y_d;
         fd_input.z = forceDimensionPos[2]-z_d;
         fd_publisher.publish(fd_input);
-
-
         usleep(1000);
     }
 }

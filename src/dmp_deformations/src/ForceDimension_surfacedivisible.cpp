@@ -44,6 +44,8 @@ std::ofstream outputfile;
 
 tf2_ros::Buffer tfBuffer;
 
+ros::Publisher fd_publisher;
+
 
 /**
 * Orientation interpolation
@@ -372,6 +374,14 @@ void pollInput(ros::Publisher hybrid_pub, double* scaling_factors, double* offse
     normalized_falcon[0] = -fdPos[0];
     normalized_falcon[1] = -fdPos[1];
     normalized_falcon[2] = fdPos[2];
+    
+
+    geometry_msgs::Vector3 fd_input;
+    fd_input.x = fdPos[0];
+    fd_input.y = fdPos[1];
+    fd_input.z = fdPos[2];
+    fd_publisher.publish(fd_input);
+    usleep(1000);
 
     // The first time the clutch is initiated, freeze the position of the falcon
     if (*freeze)
@@ -436,7 +446,7 @@ double old_force_z = 0.0;
 
 
 void feedbackInput(geometry_msgs::Wrench wrench) {
-    double scale = 0.6; // force reflection
+    double scale = 0.4; // force reflection
     double stiffness = 200; // for replay
     double viscous = 50; // friction
 
@@ -489,6 +499,9 @@ int main(int argc, char **argv) {
     ros::Subscriber force_sub = n.subscribe("/panda/wrench", 10, feedbackInput);
     ros::Publisher hybrid_pub = 
         n.advertise<panda_ros_msgs::HybridPose>("/panda/hybrid_pose", 1); 
+
+    fd_publisher = 
+        n.advertise<geometry_msgs::Vector3>("/fd/input", 5);
 
 
     if (!init_input()) {

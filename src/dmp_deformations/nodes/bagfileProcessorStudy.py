@@ -73,7 +73,7 @@ def processData(file):
 
 def main():
     # processData('/home/mike/Desktop/trial_210849.bag')
-    processData('/home/mike/Desktop/Research/Study_Results/RAL_Corrections_2020/participantTemplate/trial_133400.bag')
+    processData('/home/mike/Documents/rf/trial_193917.bag')
 
 if __name__ == "__main__":
     main()
