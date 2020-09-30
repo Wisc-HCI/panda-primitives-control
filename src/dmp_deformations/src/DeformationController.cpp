@@ -528,7 +528,7 @@ array<double,3> DeformationController::deformationScaling(array<double,3> &rotat
     
     array<double,3> final_deformation;
 
-    double k= 50;
+    double k= 100;
 
     // First scale based on the type of input
     final_deformation[0] = var_x*rotated_deformation[0];
@@ -973,8 +973,9 @@ void DeformationController::replay_demo(ros::NodeHandle n){
     
     // DMP Parameters - TODO: READ THESE FROM THE FILE
     double k=50;
+    double k_def = 100;
     double b=sqrt(2*k); // ideal underdamped
-    double b_def=2*sqrt(k); // overdamped
+    double b_def=2*sqrt(k_def); // overdamped
     readDemo(dmps,dmps_reverse,selections,starting_points,attractor_points,surfaces,variance_dmp,preactions);
 
     // Action: Tell the robot the replay is starting over
@@ -1175,7 +1176,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
 
 
 
-        double starting_z = 0.208; // MH: hardcoded for task
+        double starting_z = 0.218; // MH: hardcoded for task
         cout << "starting z:" << starting_z << endl;
 
         array<double,2> prev_uv = {-1, -1};
@@ -1476,7 +1477,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
             
             // deformation
-            ddx_imp = k*(-x_def)-b_def*dx_imp+final_deformation[0];
+            ddx_imp = k_def*(-x_def)-b_def*dx_imp+final_deformation[0];
             dx_imp = dx_imp + ddx_imp*0.01*abs(delta_s);
             x_def = x_def + dx_imp*0.01*abs(delta_s);
 
@@ -1496,7 +1497,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
             
             //deformation
-            ddy_imp = k*(-y_def)-b_def*dy_imp+final_deformation[1];
+            ddy_imp = k_def*(-y_def)-b_def*dy_imp+final_deformation[1];
             dy_imp = dy_imp + ddy_imp*0.01*abs(delta_s);
             y_def = y_def + dy_imp*0.01*abs(delta_s);
 
@@ -1518,7 +1519,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
             
             //deformation
-            ddz_imp = k*(-z_def)-b_def*dz_imp+final_deformation[2];
+            ddz_imp = k_def*(-z_def)-b_def*dz_imp+final_deformation[2];
             dz_imp = dz_imp + ddz_imp*0.01*abs(delta_s);
             z_def = z_def + dz_imp*0.01*abs(delta_s);
 
@@ -1760,7 +1761,12 @@ void DeformationController::replay_demo(ros::NodeHandle n){
             }
 
             // Allow up to 30 percent backwards
-            delta_s = 1.0+1.9*dp_in_dir;
+
+            delta_s = 1.0;
+
+            if(surfaces[ii]!="cowling4"){
+                delta_s = 1.0+1.9*dp_in_dir;
+            }
             //cout << "DS:" << delta_s << endl;
 
             //delta_s = 1.0;
