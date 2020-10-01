@@ -27,7 +27,7 @@ def main():
 
      # set hybrid gain
     gain = Float64()
-    gain.data = 0.0015
+    gain.data = 0.0014
     hgain_pub.publish(gain)
     
     time.sleep(0.5)
