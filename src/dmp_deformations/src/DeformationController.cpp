@@ -1631,7 +1631,7 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                 array<double,3> x_hat;
 
                 // Make sure to not command a value off the surface
-                if(x<0.01){
+                if(x<0.02){
                     x = 0.01;
                 }
 
@@ -1639,8 +1639,9 @@ void DeformationController::replay_demo(ros::NodeHandle n){
                     x = 0.99;
                 }
 
-                if(y<0.01){
-                    y = 0.01;
+                if(y<0.02){
+                    cout << "HEREMHMH" << endl;
+                    y = 0.02;
                 }
 
                 if(y>0.99){
