@@ -32,6 +32,10 @@ add_executable(fddeformationController src/ForceDimensionDeformationController.c
 target_include_directories(fddeformationController PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
 target_link_libraries(fddeformationController ${catkin_LIBRARIES} ${DHDC} ${BSpline} ${NLopt})
 
+add_executable(sgdeformationController src/SpeedgoatDeformationController.cpp)
+target_include_directories(sgdeformationController PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
+target_link_libraries(sgdeformationController ${catkin_LIBRARIES} ${DHDC} ${BSpline} ${NLopt})
+
 add_executable(falcondeformationController src/FalconDeformationController.cpp)
 target_include_directories(falcondeformationController PUBLIC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include)
 target_link_libraries(falcondeformationController ${catkin_LIBRARIES} ${LIBNIFALCON} ${DHDC} ${BSpline} ${NLopt})
@@ -54,6 +58,10 @@ target_link_libraries(fdVF ${catkin_LIBRARIES} ${LIBNIFALCON} ${DHDC} ${BSpline}
 
 install(TARGETS fddeformationController
   RUNTIME DESTINATION lib/fddeformations
+)
+
+install(TARGETS sgdeformationController
+  RUNTIME DESTINATION lib/sgdeformations
 )
 
 install(TARGETS falcondeformationController

@@ -42,7 +42,7 @@ class DeformationController{
         // For recording
         std::ofstream outputfile;
         double x, y, z, fx, fy, fz;
-
+        
         bool replay_active = false;
 
         // For the NL optimization
@@ -72,6 +72,7 @@ class DeformationController{
         void replay_demo(ros::NodeHandle n);
         void actualPose(geometry_msgs::Pose pose);
         void readPandaForces(geometry_msgs::Wrench wrench);
+        void readSpeedgoat(std_msgs::Float64 pos);
         bool surfaceBidirectional(string surface);
     
     public:
@@ -83,6 +84,8 @@ class DeformationController{
         //haptic cue related
         double prev_var_x, prev_var_y, prev_var_z;
         bool var_x_changing,var_y_changing,var_z_changing;
+        double theta_speedgoat;
+
         string trajectoryFile;
 
         ros::Publisher fd_publisher;
@@ -1876,6 +1879,10 @@ void DeformationController::readPandaForces(geometry_msgs::Wrench wrench) {
     fz = wrench.force.z;
 }
 
+void DeformationController::readSpeedgoat(std_msgs::Float64 pos){
+    theta_speedgoat = pos.data;
+}
+
 int DeformationController::run_deformation_controller(int argc, char **argv){
     ros::init(argc, argv, "DeformationController");
     ros::NodeHandle n("~");
@@ -1891,6 +1898,8 @@ int DeformationController::run_deformation_controller(int argc, char **argv){
     ros::Publisher command_pub = 
         n.advertise<std_msgs::String>("/panda/commands", 5);
     ros::Subscriber force_sub = n.subscribe("/panda/control_wrench", 10, &DeformationController::readPandaForces, this);
+
+    ros::Subscriber speedgoatsub = n.subscribe("/speedgoat/ang_pos", 10, &DeformationController::readSpeedgoat, this);
     
     tf2_ros::TransformListener tfListener(tfBuffer);
 
