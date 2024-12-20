@@ -28,6 +28,13 @@ sudo docker build -t panda-prim-controller-container .
 sudo docker run --rm -it --privileged --cap-add=SYS_NICE --env DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/workspace --net=host panda-prim-controller-container
 ```
 
+Add necessary environment variables:
+Replace with your Panda's IP 
+```bash
+export PANDA_IP=192.168.1.3
+```
+
+
 ## 3. Compilation:
 
 ### Compile non-ROS package (PandaController)
