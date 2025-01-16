@@ -91,12 +91,22 @@ catkin build controller --no-notify
 1. Use Franka Desktop to unlock the Panda's joints and enable FCI mode.
 2. Run `source devel/setup.bash` inside the root directory
 3. Start the launch files related to the application:
-	* Space mouse:
+	* Space mouse input:
 	    - Terminal 1: 
 			```bash
 			spacenavd
 			roslaunch inputs_ros space_mouse.launch
 			```
+	* Controller test:
+		- Terminal 1:
+			```bash
+			roslaunch controller mover_test.launch
+			```
+		- Terminal 2:	
+			```bash
+			rosrun controller controller_tester.py
+			```
+
 
 ## Updating to Noetic/Python3 Progress
 - [x] Update Dockerfile to Noetic and Python3

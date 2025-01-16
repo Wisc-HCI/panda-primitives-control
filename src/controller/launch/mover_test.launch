@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="panda_ros" type="pandaRosWrapper" name="panda_controller" output="screen">
+    </node>
+
+</launch>

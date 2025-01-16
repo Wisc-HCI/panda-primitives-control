@@ -14,7 +14,7 @@ install(DIRECTORY
 )
 
 catkin_install_python(PROGRAMS
-    nodes/mover
+    nodes/mover nodes/controller_tester.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 include_directories(${catkin_INCLUDE_DIRS})
