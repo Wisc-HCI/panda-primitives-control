@@ -14,6 +14,6 @@
     <depend>sensor_msgs</depend>
     <depend>geometry_msgs</depend>
     <depend>tf2_ros</depend>
-    <depend>relaxed_ik</depend>
+    <depend>panda_ros_msgs</depend>
 
 </package>
