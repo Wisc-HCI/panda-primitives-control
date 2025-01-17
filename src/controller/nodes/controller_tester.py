@@ -6,18 +6,23 @@ To run this, see README.md section 4 "Controller test". To test each desired
 functionality, uncomment it in main.
 
 Notes (please read BEFORE USING):
-* /panda/cart_pose in test_cart_pos(): Bot goes to caresian pose (x, y, z). This is too jerky for long-distance movements. 
-* /panda/velocity_bound_path in test_vel_bound_path: Bot goes to array of cartesian pose with specified max velocity 
-  (unit uknown but 0.1-0.5 is good speed range).
-* /panda/cart_velocity in test_vel: Bot goes to cartesian velocity (unit uknown but 0.1-0.5 is good speed range).
-* /panda/joint_pose in test_joint_pose: Bot goes to joint positions (in radians). Must specify header.stamp to be 
-  the end time that the bot should reach position, otherwise will go crazy fast and reach velocity limits.
-* /panda/commands in  test_gripper(): Gripper "grasp", "release", etc based on string published. 
+* Publishable:
+    * /panda/cart_pose in test_cart_pos(): Bot goes to caresian pose (x, y, z). This is too jerky for long-distance movements. 
+    * /panda/velocity_bound_path in test_vel_bound_path: Bot goes to array of cartesian pose with specified max velocity 
+      (unit uknown but 0.1-0.5 is good speed range).
+    * /panda/cart_velocity in test_vel: Bot goes to cartesian velocity (unit uknown but 0.1-0.5 is good speed range).
+    * /panda/joint_pose in test_joint_pose: Bot goes to joint positions (in radians). Must specify header.stamp to be 
+      the end time that the bot should reach position, otherwise will go crazy fast and reach velocity limits.
+    * /panda/commands in  test_gripper(): Gripper "grasp", "release", etc based on string published. 
+* Subscribable:
+    * /panda/wrench in test_wrench_data(): Gets wrench data (force and torque in x, y, z direction) from force/torque
+      sensor on end-effector. All will be 0 if sensor not plugged in.
+
 """
 
 import rospy
 from std_msgs.msg import String, Header
-from geometry_msgs.msg import Pose, TwistStamped
+from geometry_msgs.msg import Pose, TwistStamped, Wrench
 from panda_ros_msgs.msg import VelocityBoundPath, JointPose
 
 
@@ -148,6 +153,23 @@ def test_gripper():
         pub.publish(string)
         rate.sleep()
 
+def test_wrench_data():
+    """ Prints wrench data (torque + force of EE)"""
+
+    counter = 1
+    def callback(data):
+        # Only print data every 0.5 seconds so doesn't get behind
+        nonlocal counter
+        if counter % 500 == 0:
+            rospy.loginfo("Wrench Data:\n %s", data)
+            counter = 1
+        counter += 1
+    
+    rospy.Subscriber("/panda/wrench", Wrench, callback)
+
+    rospy.spin()
+
+
 if __name__ == '__main__':
     rospy.init_node('controller_tester', anonymous=True)
     
@@ -156,4 +178,5 @@ if __name__ == '__main__':
     # test_vel_bound_path()
     # test_vel()
     # test_joint_pose()
-    test_gripper()
+    # test_gripper()
+    test_wrench_data()
