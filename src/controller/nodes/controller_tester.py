@@ -2,17 +2,17 @@
 
 """
 This script is used to test many of the control options in panda_ros.
-To run this, see README.md section 4 "Controller test". To test the desired
+To run this, see README.md section 4 "Controller test". To test each desired
 functionality, uncomment it in main.
 
-Notes:
-* /panda/cart_pose: Bot goes to caresian pose (x, y, z). This is too jerky for long-distance movements. 
-* /panda/velocity_bound_path: Bot goes to array of cartesian pose with specified max velocity 
+Notes (please read BEFORE USING):
+* /panda/cart_pose in test_cart_pos(): Bot goes to caresian pose (x, y, z). This is too jerky for long-distance movements. 
+* /panda/velocity_bound_path in test_vel_bound_path: Bot goes to array of cartesian pose with specified max velocity 
   (unit uknown but 0.1-0.5 is good speed range).
-* /panda/cart_velocity: Bot goes to cartesian velocity (unit uknown but 0.1-0.5 is good speed range).
-* /panda/joint_pose: Bot goes to joint positions (in radians). Must specify header.stamp to be 
+* /panda/cart_velocity in test_vel: Bot goes to cartesian velocity (unit uknown but 0.1-0.5 is good speed range).
+* /panda/joint_pose in test_joint_pose: Bot goes to joint positions (in radians). Must specify header.stamp to be 
   the end time that the bot should reach position, otherwise will go crazy fast and reach velocity limits.
-
+* /panda/commands in  test_gripper(): Gripper "grasp", "release", etc based on string published. 
 """
 
 import rospy
@@ -123,6 +123,31 @@ def test_joint_pose():
         rate.sleep()
 
 
+def test_gripper():
+    pub = rospy.Publisher('/panda/commands', String, queue_size=10)
+    rate = rospy.Rate(10) # 10hz
+
+    # For some reason, a single message does not go through so need to
+    # send at least 4.
+    for i in range(4):
+        string = String()
+        string.data = "grasp"
+
+        rospy.loginfo(string)
+        pub.publish(string)
+        rate.sleep()
+
+    wait_rate = rospy.Rate(0.3)
+    wait_rate.sleep() # Wait 3 second
+
+    for i in range(4):
+        string = String()
+        string.data = "release"
+
+        rospy.loginfo(string)
+        pub.publish(string)
+        rate.sleep()
+
 if __name__ == '__main__':
     rospy.init_node('controller_tester', anonymous=True)
     
@@ -130,4 +155,5 @@ if __name__ == '__main__':
     # test_cart_pos()
     # test_vel_bound_path()
     # test_vel()
-    test_joint_pose()
+    # test_joint_pose()
+    test_gripper()
