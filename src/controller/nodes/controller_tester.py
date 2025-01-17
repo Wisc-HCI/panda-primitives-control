@@ -10,12 +10,15 @@ Notes:
 * /panda/velocity_bound_path: Bot goes to array of cartesian pose with specified max velocity 
   (unit uknown but 0.1-0.5 is good speed range).
 * /panda/cart_velocity: Bot goes to cartesian velocity (unit uknown but 0.1-0.5 is good speed range).
+* /panda/joint_pose: Bot goes to joint positions (in radians). Must specify header.stamp to be 
+  the end time that the bot should reach position, otherwise will go crazy fast and reach velocity limits.
+
 """
 
 import rospy
 from std_msgs.msg import String, Header
 from geometry_msgs.msg import Pose, TwistStamped
-from panda_ros_msgs.msg import VelocityBoundPath
+from panda_ros_msgs.msg import VelocityBoundPath, JointPose
 
 
 def test_cart_pos():
@@ -62,6 +65,7 @@ def test_vel_bound_path():
         pub.publish(vel_bound_path)
         rate.sleep()
 
+
 def test_vel():
 
     pub = rospy.Publisher('/panda/cart_velocity', TwistStamped, queue_size=10)
@@ -100,13 +104,28 @@ def test_vel():
         pub.publish(twist)
 
 
+def test_joint_pose():
+    pub = rospy.Publisher('/panda/joint_pose', JointPose, queue_size=10)
+    rate = rospy.Rate(10) # 10hz
+
+    # For some reason, a single message does not go through so need to
+    # send at least 5. Here send for 1 second and then stop.
+    for i in range(4):
+        joint_pose = JointPose()
+        joint_pose.joint_pose = [0.0, -0.8 ,0.0, -1.3, 0.0, 3.5, 0.8]  # Almost vertical
+        # joint_pose.joint_pose = [0.0, -0.7854, 0.0, -2.3562, 0.0, 1.5708, 0.7854]  # Default position
+                                 
+        joint_pose.header = Header(stamp=rospy.Time.now() + rospy.Duration(3)) # Add desired end time (3 seconds from now)
+        rospy.loginfo(joint_pose)
+        pub.publish(joint_pose)
+        rate.sleep()
 
 
 if __name__ == '__main__':
     rospy.init_node('controller_tester', anonymous=True)
     
     ##### UNCOMMENT THE FOLLOWING TO TEST #####
-    #test_cart_pos()
-    #test_vel_bound_path()
-    test_vel()
-
+    # test_cart_pos()
+    # test_vel_bound_path()
+    # test_vel()
+    test_joint_pose()
