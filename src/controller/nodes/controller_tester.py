@@ -109,13 +109,15 @@ def test_joint_pose():
     rate = rospy.Rate(10) # 10hz
 
     # For some reason, a single message does not go through so need to
-    # send at least 5. Here send for 1 second and then stop.
-    for i in range(4):
+    # send at least 5.
+    for i in range(5):
         joint_pose = JointPose()
         joint_pose.joint_pose = [0.0, -0.8 ,0.0, -1.3, 0.0, 3.5, 0.8]  # Almost vertical
         # joint_pose.joint_pose = [0.0, -0.7854, 0.0, -2.3562, 0.0, 1.5708, 0.7854]  # Default position
-                                 
-        joint_pose.header = Header(stamp=rospy.Time.now() + rospy.Duration(3)) # Add desired end time (3 seconds from now)
+        
+        # Add desired end time (3 seconds from now) so doesn't have insane speed               
+        joint_pose.header = Header(stamp=rospy.Time.now() + rospy.Duration(3))
+
         rospy.loginfo(joint_pose)
         pub.publish(joint_pose)
         rate.sleep()
@@ -124,7 +126,7 @@ def test_joint_pose():
 if __name__ == '__main__':
     rospy.init_node('controller_tester', anonymous=True)
     
-    ##### UNCOMMENT THE FOLLOWING TO TEST #####
+    ##### UNCOMMENT THE FOLLOWING INDIVIDUALLY TO TEST #####
     # test_cart_pos()
     # test_vel_bound_path()
     # test_vel()
