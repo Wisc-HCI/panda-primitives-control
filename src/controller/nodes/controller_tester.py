@@ -23,7 +23,7 @@ Notes (please read BEFORE USING):
 import rospy
 from std_msgs.msg import String, Header
 from geometry_msgs.msg import Pose, TwistStamped, Wrench
-from panda_ros_msgs.msg import VelocityBoundPath, JointPose
+from panda_ros_msgs.msg import VelocityBoundPath, JointPose, HybridPose
 
 
 def test_cart_pos():
@@ -153,6 +153,38 @@ def test_gripper():
         pub.publish(string)
         rate.sleep()
 
+def test_hybrid_pose():
+    pub = rospy.Publisher('/panda/hybrid_pose', HybridPose, queue_size=10)
+    rate = rospy.Rate(10) # 10hz
+
+    # For some reason, a single message does not go through so need to
+    # send at least 4.
+    for i in range(4):
+
+        hybrid_pose = HybridPose()
+        pose = Pose()
+        pose.position.x = 0.2
+        pose.position.y = 0.1
+        pose.position.z = 0.2
+        wrench = Wrench()
+        wrench.force.x = 0
+        wrench.force.y = 0
+        wrench.force.z = 0
+        wrench.torque.x = 0
+        wrench.torque.y = 0
+        wrench.torque.z = 0
+
+        hybrid_pose.pose = pose
+        hybrid_pose.wrench = wrench
+        # Also includes selection vector sel_vector (which I'm not sure what that is) 
+        # and constraint_frame which is optional I think 
+
+        rospy.loginfo(hybrid_pose)
+        pub.publish(hybrid_pose)
+        rate.sleep()
+
+
+
 def test_wrench_data():
     """ Prints wrench data (torque + force of EE)"""
 
@@ -167,7 +199,7 @@ def test_wrench_data():
     
     rospy.Subscriber("/panda/wrench", Wrench, callback)
 
-    rospy.spin()
+    # rospy.spin()
 
 
 if __name__ == '__main__':
@@ -180,3 +212,6 @@ if __name__ == '__main__':
     # test_joint_pose()
     # test_gripper()
     test_wrench_data()
+    # test_hybrid_pose() ### RECOMMEND RUNNING THIS WITH test_wrench_data()
+
+    rospy.spin()
