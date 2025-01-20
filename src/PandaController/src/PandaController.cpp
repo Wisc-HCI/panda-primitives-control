@@ -182,7 +182,6 @@ namespace PandaController {
     franka::JointVelocities hybridControlLoop(const franka::RobotState& robot_state, Eigen::VectorXd command) {
         // Panda hybrid controller using an admittance type architecture -> ultimately commanded as a P-law on
         // joint velocities
-
         // User command
         Eigen::Vector3d commandedPosition;
         commandedPosition << command[0], command[1], command[2];

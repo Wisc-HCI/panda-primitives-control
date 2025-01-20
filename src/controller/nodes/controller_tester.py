@@ -17,7 +17,8 @@ Notes (please read BEFORE USING):
 * Subscribable:
     * /panda/wrench in test_wrench_data(): Gets wrench data (force and torque in x, y, z direction) from force/torque
       sensor on end-effector. All will be 0 if sensor not plugged in.
-
+    * /panda/hybrid_pose in test_hybrid_pose(): Moves to position while keeping given force/torque. Very jerky for movements
+      larger than 1cm. May be better for succesive small movements. Requires force/torque sensor.
 """
 
 import rospy
@@ -42,7 +43,6 @@ def test_cart_pos():
         pub.publish(pose)
         rate.sleep()
         
-
 
 def test_vel_bound_path():
 
@@ -72,7 +72,6 @@ def test_vel_bound_path():
 
 
 def test_vel():
-
     pub = rospy.Publisher('/panda/cart_velocity', TwistStamped, queue_size=10)
     rate = rospy.Rate(10) # 10hz
 
@@ -162,13 +161,16 @@ def test_hybrid_pose():
     for i in range(4):
 
         hybrid_pose = HybridPose()
+        # Not exactly sure what this is for (perhaps restricting movement to x, y, z, and not rotation) 
+        # but required for this controller to work
+        hybrid_pose.sel_vector=[1,1,1,0,0,0] 
         pose = Pose()
-        pose.position.x = 0.2
+        pose.position.x = 0.35
         pose.position.y = 0.1
-        pose.position.z = 0.2
+        pose.position.z = 0.25
         wrench = Wrench()
         wrench.force.x = 0
-        wrench.force.y = 0
+        wrench.force.y = 1
         wrench.force.z = 0
         wrench.torque.x = 0
         wrench.torque.y = 0
@@ -182,7 +184,6 @@ def test_hybrid_pose():
         rospy.loginfo(hybrid_pose)
         pub.publish(hybrid_pose)
         rate.sleep()
-
 
 
 def test_wrench_data():
@@ -199,19 +200,19 @@ def test_wrench_data():
     
     rospy.Subscriber("/panda/wrench", Wrench, callback)
 
-    # rospy.spin()
-
 
 if __name__ == '__main__':
     rospy.init_node('controller_tester', anonymous=True)
     
     ##### UNCOMMENT THE FOLLOWING INDIVIDUALLY TO TEST #####
     # test_cart_pos()
-    # test_vel_bound_path()
+    test_vel_bound_path()
     # test_vel()
     # test_joint_pose()
     # test_gripper()
-    test_wrench_data()
-    # test_hybrid_pose() ### RECOMMEND RUNNING THIS WITH test_wrench_data()
+    # test_hybrid_pose() 
+
+    ### Data
+    # test_wrench_data()
 
     rospy.spin()

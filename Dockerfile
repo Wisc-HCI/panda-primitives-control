@@ -18,10 +18,12 @@ RUN apt-get update && \
     ros-noetic-kdl-parser-py \
     ros-noetic-kdl-conversions\
     ros-noetic-spacenav-node\
-    usbutils
+    usbutils\
+    python3-pip
 
 # Add python alias to python3
 RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN pip3 install scipy
 
 # Setup spacenavd (can't use apt-get bc that version is too old)
 WORKDIR /workspace/
