@@ -206,10 +206,10 @@ if __name__ == '__main__':
     
     ##### UNCOMMENT THE FOLLOWING INDIVIDUALLY TO TEST #####
     # test_cart_pos()
-    test_vel_bound_path()
+    # test_vel_bound_path()
     # test_vel()
     # test_joint_pose()
-    # test_gripper()
+    test_gripper()
     # test_hybrid_pose() 
 
     ### Data

@@ -1,0 +1,7 @@
+<launch>
+    <!-- Launch position control node -->
+    <node pkg="controller" type="pick_and_place_demo.py" name="pick_and_place_demo" />
+
+    <!-- Launch gripper control node -->
+    <node pkg="controller" type="ee_pose_listener.py" name="ee_pose_listener" output = "screen" />
+</launch>

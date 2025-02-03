@@ -245,6 +245,8 @@ namespace PandaController {
             jointVelocities[5], 
             jointVelocities[6]
         };
+
+        cout << "HERE!" << jointVelocities << endl;
         return output;
     }
 
