@@ -207,8 +207,8 @@ namespace PandaController {
         array<double, 6> currentWrench = readFTForces();
 
         cout << "Current Position " << position << endl;
-        cout << "Current orientation " << orientation << endl;
-        cout << "Current currentWrench " << currentWrench << endl;
+        cout << "Current orientation: (w: " << orientation.w() << ", x: " << orientation.x() << ", y: " << orientation.y() << ", z: " << orientation.z() << ")" << endl;
+        cout << "Current currentWrench " << currentWrench[0] << currentWrench[1] << currentWrench[2] << endl;
 
         // Rotate current command (positions and forces [todo: generalwrenches]) into the constraint frame to compute control law
         // note: force is first brought back to the global frame via the orientation

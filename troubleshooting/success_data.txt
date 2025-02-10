@@ -1,0 +1,884 @@
+Command Position  0.453317
+ 0.100615
+0.0395739
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437567
+0.101012
+0.126737
+Current orientation: (w: 0.999987, x: -0.00112955, y: 0.00465431, z: 0.00186597)
+Current currentWrench -0.294458-0.15074-0.055003
+Current Position CF 0.437567
+0.101012
+0.126737
+Current currentWrench CF  -0.294391
+  -0.15196
+-0.0519204
+v_x_CF 0.0787533
+v_y_CF -0.00198747
+v_z_CF -0.435814
+v_hybrid_expanded   0.0787533
+-0.00198747
+  -0.435814
+ 0.00194011
+ -0.0094215
+-0.00663199
+v_hybrid_expanded after constrain  0.0787533
+-0.00198747
+  -0.435814
+ 0.00194011
+ -0.0094215
+-0.00663199
+Final Joint Velocities: -0.058059
+   1.18709
+0.00148678
+  -0.03534
+ -0.284184
+   1.21864
+  0.173171
+Command Position  0.453317
+ 0.100615
+0.0395739
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437628
+0.101045
+0.126312
+Current orientation: (w: 0.999987, x: -0.0011257, y: 0.00466189, z: 0.00188718)
+Current currentWrench -0.415832-0.327778-0.163703
+Current Position CF 0.437628
+0.101045
+0.126312
+Current currentWrench CF -0.416096
+-0.329711
+-0.159084
+v_x_CF 0.0784483
+v_y_CF -0.00215047
+v_z_CF -0.433692
+v_hybrid_expanded   0.0784483
+-0.00215047
+  -0.433692
+  0.0019012
+-0.00949754
+-0.00684378
+v_hybrid_expanded after constrain  0.0784483
+-0.00215047
+  -0.433692
+  0.0019012
+-0.00949754
+-0.00684378
+Final Joint Velocities:-0.0577986
+   1.18258
+0.00072161
+ -0.033464
+ -0.284195
+   1.21233
+  0.173105
+Command Position  0.453317
+ 0.100615
+0.0395739
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437688
+0.101073
+0.125884
+Current orientation: (w: 0.999987, x: -0.00111896, y: 0.00466603, z: 0.00191028)
+Current currentWrench -0.490587-0.45237-0.242248
+Current Position CF 0.437688
+0.101073
+0.125884
+Current currentWrench CF -0.491089
+-0.454781
+-0.236652
+v_x_CF 0.0781492
+v_y_CF -0.00229082
+v_z_CF -0.431553
+v_hybrid_expanded   0.0781492
+-0.00229082
+  -0.431553
+ 0.00183321
+-0.00953926
+-0.00707444
+v_hybrid_expanded after constrain  0.0781492
+-0.00229082
+  -0.431553
+ 0.00183321
+-0.00953926
+-0.00707444
+Final Joint Velocities:  -0.0575181
+      1.1781
+-8.48358e-06
+  -0.0315073
+   -0.284239
+     1.20591
+    0.173136
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437742
+0.101098
+0.125441
+Current orientation: (w: 0.999987, x: -0.00111248, y: 0.00468611, z: 0.00193095)
+Current currentWrench -0.531575-0.62993-0.285961
+Current Position CF 0.437742
+0.101098
+0.125441
+Current currentWrench CF -0.531787
+-0.632612
+-0.279573
+v_x_CF 0.0809014
+v_y_CF -0.00245589
+v_z_CF -0.44615
+v_hybrid_expanded   0.0809014
+-0.00245589
+   -0.44615
+ 0.00189008
+ -0.0102211
+-0.00743674
+v_hybrid_expanded after constrain  0.0809014
+-0.00245589
+   -0.44615
+ 0.00189008
+ -0.0102211
+-0.00743674
+Final Joint Velocities:  -0.0593736
+     1.21931
+-0.000714769
+  -0.0308189
+   -0.295328
+      1.2466
+     0.17988
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437794
+0.101109
+0.125012
+Current orientation: (w: 0.999986, x: -0.00111133, y: 0.0047025, z: 0.00194539)
+Current currentWrench -0.534652-0.847327-0.302967
+Current Position CF 0.437794
+0.101109
+0.125012
+Current currentWrench CF -0.534167
+-0.850072
+-0.296054
+v_x_CF 0.0806426
+v_y_CF -0.00250962
+v_z_CF -0.444002
+v_hybrid_expanded   0.0806426
+-0.00250962
+  -0.444002
+  0.0018785
+ -0.0103851
+-0.00758101
+v_hybrid_expanded after constrain  0.0806426
+-0.00250962
+  -0.444002
+  0.0018785
+ -0.0103851
+-0.00758101
+Final Joint Velocities: -0.0590018
+    1.21492
+-0.00138377
+ -0.0287628
+  -0.295337
+    1.24031
+   0.179962
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437846
+0.101117
+0.124576
+Current orientation: (w: 0.999986, x: -0.00110674, y: 0.00471917, z: 0.00194108)
+Current currentWrench -0.534652-0.847327-0.302967
+Current Position CF 0.437846
+0.101117
+0.124576
+Current currentWrench CF -0.534184
+-0.850065
+-0.296044
+v_x_CF 0.0803801
+v_y_CF -0.00254803
+v_z_CF -0.441823
+v_hybrid_expanded   0.0803801
+-0.00254803
+  -0.441823
+ 0.00183305
+ -0.0105519
+-0.00753755
+v_hybrid_expanded after constrain  0.0803801
+-0.00254803
+  -0.441823
+ 0.00183305
+ -0.0105519
+-0.00753755
+Final Joint Velocities: -0.0585923
+    1.21046
+-0.00203821
+ -0.0266727
+  -0.295357
+    1.23392
+   0.179913
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437897
+0.101115
+0.124128
+Current orientation: (w: 0.999986, x: -0.00110092, y: 0.00475198, z: 0.00192348)
+Current currentWrench -0.51498-1.04987-0.319617
+Current Position CF 0.437897
+0.101115
+0.124128
+Current currentWrench CF -0.513939
+ -1.05254
+-0.312413
+v_x_CF 0.080128
+v_y_CF -0.00254253
+v_z_CF -0.439585
+v_hybrid_expanded    0.080128
+-0.00254253
+  -0.439585
+ 0.00177599
+   -0.01088
+-0.00736109
+v_hybrid_expanded after constrain   0.080128
+-0.00254253
+  -0.439585
+ 0.00177599
+   -0.01088
+-0.00736109
+Final Joint Velocities: -0.0581054
+    1.20584
+-0.00265235
+ -0.0246074
+  -0.295368
+    1.22755
+   0.179833
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.437975
+0.101104
+0.123711
+Current orientation: (w: 0.999986, x: -0.00109032, y: 0.00473593, z: 0.00189898)
+Current currentWrench -0.529101-1.20725-0.362943
+Current Position CF 0.437975
+0.101104
+0.123711
+Current currentWrench CF -0.527912
+ -1.21005
+-0.355301
+v_x_CF 0.0797343
+v_y_CF -0.00248667
+v_z_CF -0.437501
+v_hybrid_expanded   0.0797343
+-0.00248667
+  -0.437501
+ 0.00167031
+ -0.0107195
+-0.00711563
+v_hybrid_expanded after constrain  0.0797343
+-0.00248667
+  -0.437501
+ 0.00167031
+ -0.0107195
+-0.00711563
+Final Joint Velocities: -0.0575555
+    1.20141
+-0.00315733
+ -0.0226856
+    -0.2953
+    1.22103
+   0.179794
+Command Position  0.453922
+ 0.100607
+0.0362111
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438042
+0.101083
+0.123269
+Current orientation: (w: 0.999986, x: -0.00108151, y: 0.00475089, z: 0.00186355)
+Current currentWrench -0.542717-1.33374-0.396294
+Current Position CF 0.438042
+0.101083
+0.123269
+Current currentWrench CF -0.541468
+ -1.33661
+-0.388255
+v_x_CF 0.0794022
+v_y_CF -0.00238029
+v_z_CF -0.435288
+v_hybrid_expanded   0.0794022
+-0.00238029
+  -0.435288
+ 0.00158337
+  -0.010869
+-0.00676085
+v_hybrid_expanded after constrain  0.0794022
+-0.00238029
+  -0.435288
+ 0.00158337
+  -0.010869
+-0.00676085
+Final Joint Velocities: -0.0569289
+    1.19675
+-0.00364021
+ -0.0206794
+   -0.29523
+     1.2145
+   0.179741
+Command Position   0.45409
+ 0.100605
+0.0352767
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438123
+0.101058
+0.122852
+Current orientation: (w: 0.999987, x: -0.00107478, y: 0.00473961, z: 0.00183269)
+Current currentWrench -0.50512-1.44429-0.38346
+Current Position CF 0.438123
+0.101058
+0.122852
+Current currentWrench CF -0.503419
+ -1.44696
+-0.375572
+v_x_CF 0.079834
+v_y_CF -0.00226788
+v_z_CF -0.437874
+v_hybrid_expanded    0.079834
+-0.00226788
+  -0.437874
+ 0.00155046
+ -0.0108897
+-0.00649543
+v_hybrid_expanded after constrain   0.079834
+-0.00226788
+  -0.437874
+ 0.00155046
+ -0.0108897
+-0.00649543
+Final Joint Velocities: -0.0568796
+    1.20506
+-0.00410881
+ -0.0190867
+    -0.2982
+    1.22111
+   0.181626
+Command Position  0.454417
+   0.1006
+0.0334618
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position  0.43821
+0.101029
+0.122424
+Current orientation: (w: 0.999987, x: -0.00107119, y: 0.00472984, z: 0.00179035)
+Current currentWrench -0.420689-1.50481-0.333367
+Current Position CF  0.43821
+0.101029
+0.122424
+Current currentWrench CF -0.418416
+ -1.50701
+-0.326172
+v_x_CF 0.0810356
+v_y_CF -0.00214457
+v_z_CF -0.444812
+v_hybrid_expanded   0.0810356
+-0.00214457
+  -0.444812
+ 0.00158117
+ -0.0110512
+-0.00615616
+v_hybrid_expanded after constrain  0.0810356
+-0.00214457
+  -0.444812
+ 0.00158117
+ -0.0110512
+-0.00615616
+Final Joint Velocities: -0.0573353
+    1.22533
+-0.00462635
+ -0.0176942
+  -0.304135
+    1.23987
+   0.185247
+Command Position  0.454417
+   0.1006
+0.0334618
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438296
+0.100994
+0.121987
+Current orientation: (w: 0.999987, x: -0.00106828, y: 0.00472709, z: 0.00174504)
+Current currentWrench -0.338725-1.47091-0.275075
+Current Position CF 0.438296
+0.100994
+0.121987
+Current currentWrench CF -0.336159
+ -1.47267
+ -0.26874
+v_x_CF 0.0806024
+v_y_CF -0.00196793
+v_z_CF -0.442625
+v_hybrid_expanded   0.0806024
+-0.00196793
+  -0.442625
+  0.0015532
+ -0.0110233
+-0.00570287
+v_hybrid_expanded after constrain  0.0806024
+-0.00196793
+  -0.442625
+  0.0015532
+ -0.0110233
+-0.00570287
+Final Joint Velocities: -0.0565909
+    1.22055
+-0.00506237
+ -0.0158161
+  -0.303898
+     1.2332
+    0.18515
+Command Position  0.454634
+ 0.100598
+0.0322551
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438395
+0.100956
+0.121572
+Current orientation: (w: 0.999987, x: -0.00106212, y: 0.00469958, z: 0.00169711)
+Current currentWrench -0.262497-1.33239-0.219306
+Current Position CF 0.438395
+0.100956
+0.121572
+Current currentWrench CF -0.260008
+ -1.33373
+-0.214019
+v_x_CF 0.0811931
+v_y_CF -0.00179165
+v_z_CF -0.446586
+v_hybrid_expanded   0.0811931
+-0.00179165
+  -0.446586
+ 0.00153591
+ -0.0109206
+-0.00527958
+v_hybrid_expanded after constrain  0.0811931
+-0.00179165
+  -0.446586
+ 0.00153591
+ -0.0109206
+-0.00527958
+Final Joint Velocities: -0.0565884
+    1.23257
+-0.00550699
+ -0.0142958
+  -0.307762
+    1.24341
+   0.187582
+Command Position  0.454634
+ 0.100598
+0.0322551
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438494
+0.100921
+0.121152
+Current orientation: (w: 0.999987, x: -0.00106414, y: 0.00467597, z: 0.00166826)
+Current currentWrench -0.147654-1.12838-0.129942
+Current Position CF 0.438494
+0.100921
+0.121152
+Current currentWrench CF -0.145085
+ -1.12914
+-0.126171
+v_x_CF 0.0806982
+v_y_CF -0.0016184
+v_z_CF -0.444485
+v_hybrid_expanded   0.0806982
+ -0.0016184
+  -0.444485
+ 0.00155652
+ -0.0106842
+-0.00499128
+v_hybrid_expanded after constrain  0.0806982
+ -0.0016184
+  -0.444485
+ 0.00155652
+ -0.0106842
+-0.00499128
+Final Joint Velocities: -0.0558571
+    1.22786
+-0.00594399
+ -0.0125453
+  -0.307443
+    1.23675
+   0.187585
+Command Position  0.454634
+ 0.100598
+0.0322551
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438591
+0.100885
+0.120745
+Current orientation: (w: 0.999987, x: -0.00106837, y: 0.00464675, z: 0.00164145)
+Current currentWrench 0.00540091-0.895335-0.036185
+Current Position CF 0.438591
+0.100885
+0.120745
+Current currentWrench CF 0.00801263
+ -0.895388
+-0.0343342
+v_x_CF 0.0802123
+v_y_CF -0.00143884
+v_z_CF -0.442447
+v_hybrid_expanded   0.0802123
+-0.00143884
+  -0.442447
+ 0.00159899
+ -0.0103917
+-0.00472363
+v_hybrid_expanded after constrain  0.0802123
+-0.00143884
+  -0.442447
+ 0.00159899
+ -0.0103917
+-0.00472363
+Final Joint Velocities:-0.0551409
+   1.22332
+-0.0063622
+-0.0108172
+ -0.307076
+   1.23022
+  0.187574
+Command Position  0.454878
+ 0.100594
+0.0308969
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438701
+0.100859
+0.120333
+Current orientation: (w: 0.999988, x: -0.00107294, y: 0.00459468, z: 0.00163205)
+Current currentWrench 0.149898-0.6426990.057514
+Current Position CF 0.438701
+0.100859
+0.120333
+Current currentWrench CF  0.152524
+-0.642082
+ 0.057503
+v_x_CF 0.0808837
+v_y_CF -0.00132436
+v_z_CF -0.44718
+v_hybrid_expanded   0.0808837
+-0.00132436
+   -0.44718
+ 0.00169318
+ -0.0100651
+ -0.0046933
+v_hybrid_expanded after constrain  0.0808837
+-0.00132436
+   -0.44718
+ 0.00169318
+ -0.0100651
+ -0.0046933
+Final Joint Velocities: -0.0553018
+    1.23742
+ -0.0069495
+-0.00929279
+  -0.311363
+    1.24227
+   0.190477
+Command Position  0.454878
+ 0.100594
+0.0308969
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438797
+0.100838
+0.119892
+Current orientation: (w: 0.999988, x: -0.00107656, y: 0.00457434, z: 0.00161891)
+Current currentWrench 0.22032-0.3965730.137391
+Current Position CF 0.438797
+0.100838
+0.119892
+Current currentWrench CF  0.222854
+-0.395561
+ 0.136217
+v_x_CF 0.0804029
+v_y_CF -0.00121594
+v_z_CF -0.444976
+v_hybrid_expanded   0.0804029
+-0.00121594
+  -0.444976
+ 0.00172934
+-0.00986148
+-0.00456218
+v_hybrid_expanded after constrain  0.0804029
+-0.00121594
+  -0.444976
+ 0.00172934
+-0.00986148
+-0.00456218
+Final Joint Velocities: -0.0546233
+    1.23249
+-0.00750276
+-0.00746381
+  -0.311045
+    1.23534
+    0.19048
+Command Position  0.455049
+ 0.100592
+0.0299449
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438901
+0.100828
+ 0.11946
+Current orientation: (w: 0.999988, x: -0.00107363, y: 0.00453542, z: 0.00162039)
+Current currentWrench 0.244372-0.1931850.230357
+Current Position CF 0.438901
+0.100828
+ 0.11946
+Current currentWrench CF  0.247077
+-0.191896
+ 0.228541
+v_x_CF 0.0807401
+v_y_CF -0.0011789
+v_z_CF -0.447574
+v_hybrid_expanded   0.0807401
+ -0.0011789
+  -0.447574
+ 0.00173385
+-0.00960852
+-0.00462132
+v_hybrid_expanded after constrain  0.0807401
+ -0.0011789
+  -0.447574
+ 0.00173385
+-0.00960852
+-0.00462132
+Final Joint Velocities: -0.0545878
+    1.24078
+ -0.0081797
+-0.00578163
+  -0.314121
+    1.24155
+   0.192605
+Command Position  0.455049
+ 0.100592
+0.0299449
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.438981
+0.100828
+ 0.11899
+Current orientation: (w: 0.999988, x: -0.00107631, y: 0.00454201, z: 0.00162305)
+Current currentWrench 0.255438-0.02903510.328675
+Current Position CF 0.438981
+0.100828
+ 0.11899
+Current currentWrench CF   0.258505
+-0.0274959
+  0.326401
+v_x_CF 0.0803385
+v_y_CF -0.00117783
+v_z_CF -0.445224
+v_hybrid_expanded   0.0803385
+-0.00117783
+  -0.445224
+ 0.00176061
+-0.00967442
+-0.00464794
+v_hybrid_expanded after constrain  0.0803385
+-0.00117783
+  -0.445224
+ 0.00176061
+-0.00967442
+-0.00464794
+Final Joint Velocities: -0.0540061
+    1.23557
+-0.00889883
+-0.00386387
+   -0.31391
+    1.23451
+   0.192584
+[panda_controller-2] killing on exit
+Command Position  0.455049
+ 0.100592
+0.0299449
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.439054
+0.100836
+0.118504
+Current orientation: (w: 0.999988, x: -0.00107629, y: 0.00456819, z: 0.00163208)
+Current currentWrench 0.2248550.1084960.391042
+Current Position CF 0.439054
+0.100836
+0.118504
+Current currentWrench CF  0.22806
+0.110075
+0.388738
+v_x_CF 0.0799763
+v_y_CF -0.00122067
+v_z_CF -0.442793
+v_hybrid_expanded   0.0799763
+-0.00122067
+  -0.442793
+ 0.00176069
+-0.00993626
+-0.00473805
+v_hybrid_expanded after constrain  0.0799763
+-0.00122067
+  -0.442793
+ 0.00176069
+-0.00993626
+-0.00473805
+Final Joint Velocities: -0.0534494
+    1.23017
+-0.00967994
+-0.00195097
+  -0.313754
+    1.22745
+   0.192573
+Control stopping
+Command Position  0.455352
+ 0.100588
+0.0282634
+Command Force 0.089337
+ 0.51572
+0.252798
+Command Torque  0.0687529
+-0.0130014
+  0.006069
+Current Position 0.439137
+0.100848
+0.118048
+Current orientation: (w: 0.999988, x: -0.00107545, y: 0.00455632, z: 0.00164839)
+Current currentWrench 0.1202140.2119870.383359
+Current Position CF 0.439137
+0.100848
+0.118048
+Current currentWrench CF    0.123
+0.213211
+0.381794
+v_x_CF 0.0810722
+v_y_CF -0.00129913
+v_z_CF -0.448921
+v_hybrid_expanded   0.0810722
+-0.00129913
+  -0.448921
+ 0.00181247
+ -0.0100581
+ -0.0049793
+v_hybrid_expanded after constrain  0.0810722
+-0.00129913
+  -0.448921
+ 0.00181247
+ -0.0100581
+ -0.0049793
+Final Joint Velocities:  -0.0539541
+     1.24844
+  -0.0106328
+-0.000145778
+   -0.319533
+     1.24377
+    0.196234
