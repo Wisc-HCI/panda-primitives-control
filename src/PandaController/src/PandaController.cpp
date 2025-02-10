@@ -190,6 +190,12 @@ namespace PandaController {
         Eigen::Vector3d commandedTorque;
         commandedTorque << command[16], command[17], command[18];
 
+
+       cout << "Command Position " << commandedPosition << endl;
+       cout << "Command Force " << commandedForce << endl;
+       cout << "Command Torque " << commandedTorque << endl;
+
+
         Eigen::Quaterniond desired_qCF = Eigen::Quaterniond(command[3], command[4], command[5], command[6]);
         Eigen::Quaterniond constraint_frame = Eigen::Quaterniond(command[19], command[20], command[21], command[22]);
         Eigen::VectorXd selection_vector(3);
@@ -200,6 +206,10 @@ namespace PandaController {
         auto orientation = getEEOrientation();
         array<double, 6> currentWrench = readFTForces();
 
+        cout << "Current Position " << position << endl;
+        cout << "Current orientation " << orientation << endl;
+        cout << "Current currentWrench " << currentWrench << endl;
+
         // Rotate current command (positions and forces [todo: generalwrenches]) into the constraint frame to compute control law
         // note: force is first brought back to the global frame via the orientation
         Eigen::Vector3d currentPositionCF = constraint_frame.inverse() * position;
@@ -207,18 +217,28 @@ namespace PandaController {
         currentForce << currentWrench[0], currentWrench[1], currentWrench[2];
         Eigen::Vector3d currentForceCF = constraint_frame.inverse() * orientation * currentForce;
 
+
+        cout << "Current Position CF " << currentPositionCF << endl;
+        cout << "Current currentWrench CF " << currentForceCF << endl;
+
         // Compute Position/Force Hybrid Control Law
         double scaling_factor = 5;
         double Kfp = 0.0012;
         double v_x_CF = selection_vector[0]*(commandedPosition[0] - currentPositionCF[0]) * scaling_factor + (1-selection_vector[0])*Kfp*(commandedForce[0]+currentForceCF[0]);
         double v_y_CF = selection_vector[1]*(commandedPosition[1] - currentPositionCF[1]) * scaling_factor + (1-selection_vector[1])*Kfp*(commandedForce[1]+currentForceCF[1]);
         double v_z_CF = selection_vector[2]*(commandedPosition[2] - currentPositionCF[2]) * scaling_factor + (1-selection_vector[2])*Kfp*(commandedForce[2]+currentForceCF[2]);
+
+
+        cout << "v_x_CF " << v_x_CF << endl;
+        cout << "v_y_CF " << v_y_CF << endl;
+        cout << "v_z_CF " << v_z_CF << endl;
         
         // Rotate the desired orientation and cartesian velocity (difference) out of the constraint frame
         Eigen::Quaterniond desired_q = constraint_frame * desired_qCF;     
         Eigen::Vector3d v_CF;
         v_CF << v_x_CF, v_y_CF, v_z_CF;
         Eigen::Vector3d v_global = constraint_frame * v_CF;
+
         
         // Orientation control law
         Eigen::Quaterniond difference((desired_q*orientation.inverse()).normalized());
@@ -229,11 +249,17 @@ namespace PandaController {
         double v_yaw = difference_a.yaw * scaling_factor;
 
 
+
         Eigen::VectorXd v_hybrid_expanded(6);
         v_hybrid_expanded << v_global[0], v_global[1], v_global[2], v_roll, v_pitch, v_yaw;
 
+        cout << "v_hybrid_expanded " << v_hybrid_expanded << endl;
+
 
         constrainForces(v_hybrid_expanded, robot_state);
+
+        cout << "v_hybrid_expanded after constrain" << v_hybrid_expanded << endl;
+        
         Eigen::VectorXd jointVelocities = Eigen::Map<Eigen::MatrixXd>(readJacobian().data(), 6, 7).completeOrthogonalDecomposition().solve(v_hybrid_expanded);
         
         franka::JointVelocities output = {
@@ -246,7 +272,7 @@ namespace PandaController {
             jointVelocities[6]
         };
 
-        cout << "HERE!" << jointVelocities << endl;
+        cout << "Final Joint Velocities:" << jointVelocities << endl;
         return output;
     }
 
