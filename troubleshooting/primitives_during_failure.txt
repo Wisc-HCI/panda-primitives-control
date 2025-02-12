@@ -1,0 +1,933 @@
+
+PROGRESS 0.2264867359458364
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1132433679729182
+  y: 0.04529734718916728
+  z: -0.052091949267542376
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.937380470546136
+  w: -0.34830712516212553
+PROGRESS 0.22934840236117107
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.11467420118058554
+  y: 0.04586968047223422
+  z: -0.05275013254306935
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9358053318866837
+  w: -0.35251720640623185
+PROGRESS 0.23135851072720007
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.11567925536360003
+  y: 0.04627170214544002
+  z: -0.053212457467256016
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9346876061282157
+  w: -0.3554702223116666
+PROGRESS 0.233451881465384
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.116725940732692
+  y: 0.046690376293076805
+  z: -0.053693932737038326
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9335136768340555
+  w: -0.35854178998237085
+PROGRESS 0.2359467043526874
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1179733521763437
+  y: 0.04718934087053748
+  z: -0.0542677420011181
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9321014376564912
+  w: -0.36219733560409045
+PROGRESS 0.23958012713650972
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.11979006356825486
+  y: 0.047916025427301945
+  z: -0.05510342924139724
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9300190745861849
+  w: -0.3675112527608595
+PROGRESS 0.24162871125194318
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12081435562597159
+  y: 0.04832574225038864
+  z: -0.055574603587946934
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9288316439393325
+  w: -0.3705020610158019
+PROGRESS 0.24372839286347317
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12186419643173659
+  y: 0.048745678572694635
+  z: -0.05605753035859883
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9276046146881661
+  w: -0.3735634869861065
+PROGRESS 0.24990061057567275
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12495030528783638
+  y: 0.049980122115134556
+  z: -0.05747714043240473
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9239392659970241
+  w: -0.3825391911280207
+PROGRESS 0.2522983274716141
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12614916373580706
+  y: 0.050459665494322826
+  z: -0.05802861531847125
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9224919493998825
+  w: -0.3860163251630747
+PROGRESS 0.2544289529405467
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12721447647027334
+  y: 0.05088579058810934
+  z: -0.05851865917632574
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9211948742341818
+  w: -0.3891015339017183
+PROGRESS 0.25638144886478426
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12819072443239213
+  y: 0.051276289772956854
+  z: -0.05896773323890038
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9199971795143493
+  w: -0.39192497966529516
+PROGRESS 0.25782256339107695
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12891128169553848
+  y: 0.05156451267821539
+  z: -0.0592991895799477
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9191076235311827
+  w: -0.3940065689387193
+PROGRESS 0.2592406723889481
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.12962033619447405
+  y: 0.051848134477789624
+  z: -0.05962535464945807
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9182276705080791
+  w: -0.3960529574606237
+PROGRESS 0.2611860437120222
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1305930218560111
+  y: 0.052237208742404444
+  z: -0.06007279005376511
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9170131337303684
+  w: -0.39885700766817356
+PROGRESS 0.2625742283603754
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1312871141801877
+  y: 0.05251484567207509
+  z: -0.06039207252288635
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9161412245229521
+  w: -0.40085565572857523
+PROGRESS 0.26368106981781514
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.13184053490890757
+  y: 0.05273621396356303
+  z: -0.060646646058097484
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9154429035542491
+  w: -0.40244787281356825
+PROGRESS 0.26555315440576616
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.13277657720288308
+  y: 0.05311063088115323
+  z: -0.06107722551332622
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.91425548330728
+  w: -0.4051381384695494
+PROGRESS 0.26664941057070535
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.13332470528535267
+  y: 0.053329882114141074
+  z: -0.06132936443126223
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9135564822340393
+  w: -0.4067118805348173
+PROGRESS 0.26773772669894513
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.13386886334947257
+  y: 0.05354754533978903
+  z: -0.061579677140757384
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.912859864348217
+  w: -0.40827303126970665
+PROGRESS 0.2690603597226668
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1345301798613334
+  y: 0.05381207194453336
+  z: -0.06188388273621336
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9120096720583664
+  w: -0.41016869465134836
+PROGRESS 0.27142387614221736
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0[sim_ee_static_publisher-8] killing on exit
+[pandaJacob-7] killing on exit
+
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.13571193807110868
+  y: 0.05428477522844347
+  z: -0.062427491512709994
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9104805967680406
+  w: -0.41355178987511654
+[mover_server-5] killing on exit
+[planner-4] killing on exit
+[rotated_camera_static_publisher-6] killing on exit
+[panda_state_publisher-3] killing on exit
+[internal_camera_static_publisher-2] killing on exit
+[external_view_static_publisher-1] killing on exit
+PROGRESS 0.2779356582887314
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1389678291443657
+  y: 0.055587131657746286
+  z: -0.06392520140640823
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9062029506301567
+  w: -0.4228430113756143
+PROGRESS 0.2827811717765445
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.14139058588827225
+  y: 0.056556234355308904
+  z: -0.06503966950860524
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9029583414401858
+  w: -0.42972809266277784
+PROGRESS 0.28484522782067917
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.14242261391033958
+  y: 0.05696904556413584
+  z: -0.06551440239875621
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.9015603285356012
+  w: -0.4326534109547491
+PROGRESS 0.290683173317885
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.1453415866589425
+  y: 0.058136634663577005
+  z: -0.06685712986311355
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8975549485446981
+  w: -0.44090261321852514
+PROGRESS 0.29555067368009424
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.14777533684004712
+  y: 0.05911013473601885
+  z: -0.06797665494642167
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8941576704232144
+  w: -0.4477522310646038
+PROGRESS 0.30358072421634014
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15179036210817007
+  y: 0.06071614484326803
+  z: -0.06982356656975823
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.888438934030688
+  w: -0.45899483711520656
+PROGRESS 0.30594301961723497
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15297150980861748
+  y: 0.061188603923446994
+  z: -0.07036689451196404
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8867296361783291
+  w: -0.46228838653274434
+PROGRESS 0.3087214228065555
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15436071140327776
+  y: 0.061744284561311105
+  z: -0.07100592724550778
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.884703629995631
+  w: -0.46615393066298777
+PROGRESS 0.3123521994807175
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15617609974035876
+  y: 0.06247043989614351
+  z: -0.07184100588056504
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8820306821731695
+  w: -0.4711919733029557
+PROGRESS 0.3157645384789373
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15788226923946866
+  y: 0.06315290769578746
+  z: -0.07262584385015558
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8794923925006822
+  w: -0.4759129453307885
+PROGRESS 0.3177190708573665
+self._starting_pose.pose: position: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.5
+  w: 0.0
+action.pose.pose: position: 
+  x: 0.5
+  y: 0.2
+  z: -0.23
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0
+ goal.pose after interpo: position: 
+  x: 0.15885953542868325
+  y: 0.0635438141714733
+  z: -0.0730753862971943
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.8780271150375148
+  w: -0.4786108912873782

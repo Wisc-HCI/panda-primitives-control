@@ -839,7 +839,9 @@ Final Joint Velocities: -0.0534494
   -0.313754
     1.22745
    0.192573
+
 Control stopping
+
 Command Position  0.455352
  0.100588
 0.0282634
