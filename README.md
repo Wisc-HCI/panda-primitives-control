@@ -1,4 +1,8 @@
 # PandaFCI
+**This repository has been archived as we have split it into 2 different ROS packages to enable modularity. Please use [PandaController](https://github.com/Wisc-HCI/PandaController) and [panda_ros](https://github.com/Wisc-HCI/panda_ros) instead.**
+
+---
+
 Welcome to PandaFCI! This is a set of interfaces for controlling the Panda robot in real time through Franka Control Interface. It allows both real-time control (1kHz) and ros support (in cartesian space and joint space, both in position and velocity).
 
 ## 1. Prequisites
